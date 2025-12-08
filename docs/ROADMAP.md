@@ -2,7 +2,7 @@
 
 ## 📗 Documentation
 
-- [README](main/README.md)
+- [README](./README.md)
 - [ARCHITECTURE](docs/ARCHITECTURE.md)
 # TRAXR Roadmap
 
