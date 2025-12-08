@@ -1,4 +1,10 @@
 # TRAXR Architecture
+---
+## 📗 Documentation
+
+- [README](../README.md)
+- [ROADMAP](ROADMAP.md)
+---
 ### XRPL-Native Liquidity Intelligence Layer
 
 TRAXR is designed as a modular, extensible, and network-agnostic analytics engine for XRPL liquidity.
