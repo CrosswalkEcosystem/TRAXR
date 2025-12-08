@@ -196,8 +196,8 @@ Implements:
 ### 5.3 Long Term (M4–M5)
 - embeddable TRAXR widgets  
 - TRAXR SDK for wallets/explorers  
-- multi-network expansion (Solana AMM/CLMM version)  
-- fully versioned scoring models with audit trails
+- formal scoring model versioning (semantic scoring versions)  
+- long-term expandability to additional networks (future research)
 
 ---
 
