@@ -126,3 +126,11 @@ Upcoming endpoints (roadmap):
     ""     ""    """ ""    ""  """  """  ""    """
                             
 ``` 
+## Status
+TRAXR is currently in active MVP development.  
+Public endpoints, UI components, and scoring integration are functional.  
+Full XRPL indexer and advanced scoring versions will be part of upcoming milestones.
+
+## License
+UNLICENSED — proprietary module.  
+TRAXR scoring logic is delivered as a private package and is not open-source.
