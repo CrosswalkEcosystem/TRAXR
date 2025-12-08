@@ -3,6 +3,8 @@
 
 TRAXR is the risk and intelligence layer for XRPL liquidity. It analyzes AMM pools, trustlines, issuers, and volatility to produce a CTS-style safety score (0-100) mapped onto 0-6 TRAXR nodes. The UI and API are reusable for XRPL wallets, explorers, DEX UIs, and analytics dashboards. Roadmap: operate TRAXR-owned XRPL AMM and trustline indexer (no XRPSCAN dependency) and present to the XRPL Foundation for grant consideration.
 
+Scoring is delivered by a private npm package (`@crosswalk.pro/traxr-cts-xrpl`) so the CTS logic stays private; the app consumes that package via `src/lib/scoringAdapter.ts`.
+
 ---
 
 ## Quickstart
@@ -15,6 +17,10 @@ npm run dev
 ---
 
 ## Environment configuration
+
+### Private scoring package
+- Add an `.npmrc` (or set env) with `//registry.npmjs.org/:_authToken=${NPM_TOKEN}`.
+- Ensure your npm user has access to `@crosswalk.pro/traxr-cts-xrpl`.
 
 ### Core flags
 - `NEXT_PUBLIC_TRAXR_ENABLED=true|false` - toggle TRAXR UI.
@@ -72,8 +78,9 @@ Upcoming endpoints (roadmap):
 ---
 
 ## Architecture
-- `src/lib/cts.ts` - CTS-style scoring engine (depth/activity/impact/stability/trust/fee) plus XRPL-specific heuristics.
-- `src/lib/traxrService.ts` - loads local XRPL pool data, caches and scores pools, fuzzy matcher for tokens/pools.
+- `@crosswalk.pro/traxr-cts-xrpl` (private) – CTS-XRPL scoring engine (depth/activity/impact/stability/trust/fee + warnings).
+- `src/lib/scoringAdapter.ts` – thin wrapper to call the private package.
+- `src/lib/traxrService.ts` – loads local XRPL pool data, caches and scores pools (uses the private scorer), fuzzy matcher for tokens/pools.
 - `src/app/api/traxr/*` - read-only HTTP surface for TRAXR consumers.
 - `src/components/*` - TRAXR badge, breakdown, trust map, liquidity visualization, warnings.
 - `scripts/fetch_xrpl_pools.js` - safe pool enumeration -> `amm_info` enrichment -> JSON export.
