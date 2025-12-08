@@ -140,7 +140,7 @@ Implements:
 ---
 
 # 4. Data Flow Diagram
-
+```
     XRPL RPC Layer
           │
           ▼
@@ -176,7 +176,7 @@ Implements:
  ┌──────────────────┐
  │ Frontend UI      │
  └──────────────────┘
- 
+``` 
 ---
 
 # 5. Roadmap Alignment (How Architecture Evolves)
