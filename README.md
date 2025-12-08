@@ -1,5 +1,10 @@
 # TRAXR - Trustline Risk Analytics eXperience & Reporting
 ### Know Your Pool.
+![Status](https://img.shields.io/badge/status-MVP-blue)
+![XRPL](https://img.shields.io/badge/network-XRPL-black)
+![License](https://img.shields.io/badge/license-Proprietary-red)
+![Scoring](https://img.shields.io/badge/scoring-private-orange)
+
 
 TRAXR is an intelligence and risk-assessment layer for XRPL liquidity. 
 It evaluates AMM pools, trustlines, issuers, and market behavior to generate 
