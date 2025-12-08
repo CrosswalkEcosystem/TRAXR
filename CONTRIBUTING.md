@@ -48,7 +48,7 @@ Security reports should be sent privately to:
 If you're a wallet, explorer, analytics provider, or XRPL tooling team and want
 to integrate TRAXR:
 
-Email us at **ecosystem@crosswalk.pro**
+Email us at **csw@crosswalk.pro**
 
 We provide guidance on:
 
