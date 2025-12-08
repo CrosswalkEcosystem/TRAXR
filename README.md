@@ -11,6 +11,8 @@
 - [ROADMAP](docs/ROADMAP.md)
 - [ARCHITECTURE](docs/ARCHITECTURE.md)
 
+---
+
 TRAXR is an intelligence and risk-assessment layer for XRPL liquidity. 
 It evaluates AMM pools, trustlines, issuers, and market behavior to generate 
 a unified TRAXR Safety Score (0–100 → 0–6 Nodes). 
