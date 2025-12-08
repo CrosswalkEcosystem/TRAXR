@@ -1,0 +1,16 @@
+                  {poolLabel(hero)} <span className="text-white/50 text-sm">CTS {hero.ctsNodes}</span>
+                  <span>Score {hero.score}</span>
+                  <span>Trustlines {(hero.metrics?.trustlines ?? 0).toLocaleString("en-US")}</span>
+                  <span>24h Vol ${(hero.metrics?.volume24hUsd ?? 0).toLocaleString("en-US")}</span>
+                  <span>Liq ${(hero.metrics?.liquidityUsd ?? 0).toLocaleString("en-US")}</span>
+                        <span className="text-white/80">
+                        </span>
+                        <span className="text-white/60">
+                        </span>
+                              <span className="truncate pr-2">
+                              </span>
+                              <span className="text-white/60">CTS {pool.ctsNodes}</span>
+        <span>Zoom</span>
+        <span className="text-white/50">
+          {pendingZoom ? "Tap to zoom at point" : "Drag to pan · click + to zoom"}
+        </span>

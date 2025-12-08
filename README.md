@@ -1,36 +1,111 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TRAXR - Trustline Risk Analytics eXperience & Reporting
+### Know Your Pool.
 
-## Getting Started
+TRAXR is the risk and intelligence layer for XRPL liquidity. It analyzes AMM pools, trustlines, issuers, and volatility to produce a CTS-style safety score (0-100) mapped onto 0-6 TRAXR nodes. The UI and API are reusable for XRPL wallets, explorers, DEX UIs, and analytics dashboards. Roadmap: operate TRAXR-owned XRPL AMM and trustline indexer (no XRPSCAN dependency) and present to the XRPL Foundation for grant consideration.
 
-First, run the development server:
+---
 
-```bash
+## Quickstart
+```
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment configuration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Core flags
+- `NEXT_PUBLIC_TRAXR_ENABLED=true|false` - toggle TRAXR UI.
+- `TRAXR_OFFLINE=true` - skip live XRPL fetch during local dev (use cached JSON).
+- `TRAXR_FALLBACK_SAMPLE=true` - allow fallback to bundled sample JSON.
+- `TRAXR_LOCAL_POOLS_PATH` - path to XRPL pool JSON (default `data/xrplPools.json`).
+- `TRAXR_FETCH_TIMEOUT_MS` - timeout for XRPL RPC calls (default `10000`).
 
-## Learn More
+### Fetch-script flags (`scripts/fetch_xrpl_pools.js`)
+- `XRPL_RPC_URL` - WebSocket endpoints (default `wss://xrplcluster.com,wss://s2.ripple.com,wss://xrpl.ws,wss://s1.ripple.com`).
+- `LIMIT` - max pools to save (default `200`).
+- `MAX_INFO` - max pools enriched with `amm_info` (default `60`).
+- `TIMEOUT_MS` - request timeout (default `10000`).
+- `AMM_INFO_DELAY_MS` - delay between `amm_info` calls (default `150` ms).
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Fetch XRPL AMM pools to JSON (dev flow)
+The fetcher discovers AMM ledger entries via `ledger_data`, enriches them with `amm_info` (reserves, fee, LP info), and writes normalized output to `data/xrplPools.json`. Numbers are stored as USD-friendly floats for UI display (US locale formatting in the app).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Run:
+```
+# optional override: XRPL_RPC_URL=wss://s2.ripple.com
+XRPL_RPC_URL=wss://xrplcluster.com node scripts/fetch_xrpl_pools.js
+```
 
-## Deploy on Vercel
+Why JSON? It lets us iterate on the CTS-XRP scoring model without running a full XRPL indexer yet. The script is throttled and designed to be replaced by TRAXR-owned infra.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## TRAXR scoring API (read-only engine)
+Fuzzy matching works on mintA/mintB, token codes, and token names (mint strings like `CODE.issuer` are accepted).
+
+Example:
+```
+GET http://localhost:3000/api/traxr/score?mintA=XRP&mintB=RLUSD
+```
+or with full mint:
+```
+GET http://localhost:3000/api/traxr/score?mintA=XRP&mintB=524C555344000000000000000000000000000000.rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De
+```
+
+Response includes:
+- pool ID
+- TRAXR Score (0-100) and TRAXR Nodes (0-6)
+- dimension breakdown: depth, activity, impact, stability, trust, fee
+- warnings and raw metrics used for computation
+
+Upcoming endpoints (roadmap):
+- `GET /api/traxr/pools`
+- `GET /api/traxr/pools/:id`
+- `GET /api/traxr/issuer/:address`
+- `GET /api/traxr/alerts`
+
+---
+
+## Architecture
+- `src/lib/cts.ts` - CTS-style scoring engine (depth/activity/impact/stability/trust/fee) plus XRPL-specific heuristics.
+- `src/lib/traxrService.ts` - loads local XRPL pool data, caches and scores pools, fuzzy matcher for tokens/pools.
+- `src/app/api/traxr/*` - read-only HTTP surface for TRAXR consumers.
+- `src/components/*` - TRAXR badge, breakdown, trust map, liquidity visualization, warnings.
+- `scripts/fetch_xrpl_pools.js` - safe pool enumeration -> `amm_info` enrichment -> JSON export.
+
+---
+
+## Why TRAXR matters (XRPL impact)
+1) Independent XRPL data infra: roadmap to drop XRPSCAN reliance.  
+2) Standardized safety score for XRPL (CTS-XRP) that wallets, DEX, and explorers can adopt.  
+3) Reusable analytics layer: TRAXR adds insight, not enforcement.  
+4) Transparency: open weights, visible heuristics, grant-ready posture.  
+5) Embeddable widgets: badge, trust map, liquidity view, issuer/trustline diagnostics.
+
+---
+
+## Vision
+- The intelligence layer for XRPL liquidity.  
+- A shared safety standard for the ecosystem.  
+- Trustline-aware, volatility-aware, issuer-aware.  
+- Know Your Pool.
+
+
+
+                               
+```
+                                                  
+ mmmmmmmm  mmmmmm       mm     mmm  mmm  mmmmmm   
+ """##"""  ##""""##    ####     ##mm##   ##""""## 
+    ##     ##    ##    ####      ####    ##    ## 
+    ##     #######    ##  ##      ##     #######  
+    ##     ##  "##m   ######     ####    ##  "##m 
+    ##     ##    ##  m##  ##m   ##  ##   ##    ## 
+    ""     ""    """ ""    ""  """  """  ""    """
+                            
+``` 

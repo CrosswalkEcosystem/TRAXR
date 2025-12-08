@@ -1,0 +1,6 @@
+@crosswalk.pro:registry=https://registry.npmjs.org/
+//registry.npmjs.org/:_authToken=${NPM_TOKEN}
+
+# If using GitHub Packages, replace the above with:
+# @crosswalk.pro:registry=https://npm.pkg.github.com
+# //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
