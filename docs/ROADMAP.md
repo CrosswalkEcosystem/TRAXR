@@ -2,8 +2,8 @@
 
 ## 📗 Documentation
 
-- ![README](README.md)
-- ![ARCHITECTURE](docs/ARCHITECTURE.md)
+- [README](README.md)
+- [ARCHITECTURE](docs/ARCHITECTURE.md)
 # TRAXR Roadmap
 
 TRAXR is being developed as a long-term, XRPL-native intelligence and safety
