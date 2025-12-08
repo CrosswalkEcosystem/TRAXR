@@ -1,10 +1,10 @@
-**ROADMAP.md:**
-
+# TRAXR Roadmap
+---
 ## 📗 Documentation
 
 - [README](../README.md)
 - [ARCHITECTURE](ARCHITECTURE.md)
-# TRAXR Roadmap
+---
 
 TRAXR is being developed as a long-term, XRPL-native intelligence and safety
 layer for liquidity pools, trustlines, and issuers.
