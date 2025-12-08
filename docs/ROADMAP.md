@@ -4,6 +4,7 @@
 ## 📗 `docs/ROADMAP.md`
 
 ```markdown
+---
 # TRAXR Roadmap
 
 TRAXR is being developed as a long-term, XRPL-native intelligence and safety
