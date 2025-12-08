@@ -1,7 +1,13 @@
 # TRAXR - Trustline Risk Analytics eXperience & Reporting
 ### Know Your Pool.
 
-TRAXR is the risk and intelligence layer for XRPL liquidity. It analyzes AMM pools, trustlines, issuers, and volatility to produce a CTS-style safety score (0-100) mapped onto 0-6 TRAXR nodes. The UI and API are reusable for XRPL wallets, explorers, DEX UIs, and analytics dashboards. Roadmap: operate TRAXR-owned XRPL AMM and trustline indexer (no XRPSCAN dependency) and present to the XRPL Foundation for grant consideration.
+TRAXR is an intelligence and risk-assessment layer for XRPL liquidity. 
+It evaluates AMM pools, trustlines, issuers, and market behavior to generate 
+a unified TRAXR Safety Score (0–100 → 0–6 Nodes). 
+The scoring model is modular, versioned, and designed to evolve as TRAXR’s 
+dedicated XRPL indexer matures.
+
+The UI and API are reusable for XRPL wallets, explorers, DEX UIs, and analytics dashboards. Roadmap: operate TRAXR-owned XRPL AMM and trustline indexer (no XRPSCAN dependency) and present to the XRPL Foundation for grant consideration.
 
 Scoring is delivered by a private npm package (`@crosswalk.pro/traxr-cts-xrpl`) so the CTS logic stays private; the app consumes that package via `src/lib/scoringAdapter.ts`.
 
@@ -24,8 +30,8 @@ npm run dev
 
 ### Core flags
 - `NEXT_PUBLIC_TRAXR_ENABLED=true|false` - toggle TRAXR UI.
-- `TRAXR_OFFLINE=true` - skip live XRPL fetch during local dev (use cached JSON).
-- `TRAXR_FALLBACK_SAMPLE=true` - allow fallback to bundled sample JSON.
+- `TRAXR_OFFLINE=true` — run TRAXR in offline mode using local datasets.
+- `TRAXR_FALLBACK_SAMPLE=true` — load an embedded sample dataset for testing and demos.
 - `TRAXR_LOCAL_POOLS_PATH` - path to XRPL pool JSON (default `data/xrplPools.json`).
 - `TRAXR_FETCH_TIMEOUT_MS` - timeout for XRPL RPC calls (default `10000`).
 
@@ -47,7 +53,11 @@ Run:
 XRPL_RPC_URL=wss://xrplcluster.com node scripts/fetch_xrpl_pools.js
 ```
 
-Why JSON? It lets us iterate on the CTS-XRP scoring model without running a full XRPL indexer yet. The script is throttled and designed to be replaced by TRAXR-owned infra.
+Why JSON?
+JSON-based data is a temporary bootstrap layer.  
+It enables rapid iteration while the dedicated TRAXR indexer (AMM + Trustlines + Issuers) 
+is under development. The fetch script is intentionally throttled and will be replaced 
+by TRAXR-owned infrastructure.
 
 ---
 
@@ -78,7 +88,7 @@ Upcoming endpoints (roadmap):
 ---
 
 ## Architecture
-- `@crosswalk.pro/traxr-cts-xrpl` (private) – CTS-XRPL scoring engine (depth/activity/impact/stability/trust/fee + warnings).
+- `@crosswalk.pro/traxr-cts-xrpl` (private) – CTS-XRPL scoring engine (multi-dimensional scoring model covering liquidity characteristics, market behavior, issuer signals, trustline structure, and fee dynamics + warnings).
 - `src/lib/scoringAdapter.ts` – thin wrapper to call the private package.
 - `src/lib/traxrService.ts` – loads local XRPL pool data, caches and scores pools (uses the private scorer), fuzzy matcher for tokens/pools.
 - `src/app/api/traxr/*` - read-only HTTP surface for TRAXR consumers.
@@ -91,7 +101,7 @@ Upcoming endpoints (roadmap):
 1) Independent XRPL data infra: roadmap to drop XRPSCAN reliance.  
 2) Standardized safety score for XRPL (CTS-XRP) that wallets, DEX, and explorers can adopt.  
 3) Reusable analytics layer: TRAXR adds insight, not enforcement.  
-4) Transparency: open weights, visible heuristics, grant-ready posture.  
+4) Transparency: clear scoring rationale, visible dimensional breakdown, and grant-ready posture.  
 5) Embeddable widgets: badge, trust map, liquidity view, issuer/trustline diagnostics.
 
 ---
