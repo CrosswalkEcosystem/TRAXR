@@ -75,13 +75,13 @@ export default function Home() {
               </p>
               <div className="flex flex-wrap items-center gap-4 text-sm text-white/60">
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                  XRPSCAN-fed pools (local cache) — roadmap: migrate to TRAXR-owned XRPL infra
+                  XRPSCAN-fed pools (local cache) • Roadmap: migrate to TRAXR XRPL infra
                 </span>
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                  CTS depth/activity/impact/stability/trust/fee
+                  1,000-pool sample • MVP dataset
                 </span>
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                  Background refresh • 5m
+                  Manual refresh • Cache regenerates on sync
                 </span>
               </div>
             </div>
