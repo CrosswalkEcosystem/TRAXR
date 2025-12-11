@@ -132,8 +132,8 @@ export function TraxrDashboard({ pools }: Props) {
             Select an existing XRPL pool to view CTS nodes and warnings.
           </div>
           <div className="text-sm text-white/60">
-            List is backed by the current TRAXR scan cache (top pools, 5m
-            refresh). Pools missing will show "Not available".
+            List is backed by the current TRAXR scan cache (1,000-pool MVP sample). 
+            Pools missing will show “Not available”.
           </div>
         </div>
       </div>
