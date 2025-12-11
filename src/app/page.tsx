@@ -56,7 +56,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(0,255,255,0.12),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(0,180,255,0.12),transparent_28%)]" />
           <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-4 lg:w-7/12 xl:w-2/3">
-              <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-cyan-400/50 bg-cyan-500/10 px-2 py-1 text-[8px] xs:text-[9px] sm:text-[10px] md:text-xs uppercase tracking-[0.15em] sm:tracking-[0.25em] text-cyan-100 whitespace-nowrap">
+              <div className="inline-flex max-w-full items-center gap-[clamp(0.05rem,0.25vw,0.25rem)] rounded-full border border-cyan-400/50 bg-cyan-500/10 px-[clamp(0.15rem,0.4vw,0.55rem)] py-[clamp(0.1rem,0.35vw,0.35rem)] text-[clamp(6px,0.75vw,10px)] uppercase tracking-[clamp(0.04em,0.45vw,0.18em)] text-cyan-100 whitespace-nowrap">
                 <span className="opacity-80">TRAXR • 
                   <span className="text-blue-400 font-bold">&nbsp;T</span>rustline&nbsp; 
                   <span className="text-blue-400 font-bold">R</span>isk&nbsp;

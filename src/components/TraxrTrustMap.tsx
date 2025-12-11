@@ -36,7 +36,7 @@ export function TraxrTrustMap({ pools, selected, onSelect }: Props) {
   };
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#0b1220] via-[#0f1b2d] to-[#0f172a] p-4 sm:p-5 lg:p-6 shadow-[0_0_60px_rgba(0,255,255,0.08)]">
+    <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#0b1220] via-[#0f1b2d] to-[#0f172a] p-4 sm:p-5 lg:p-6 shadow-[0_0_60px_rgba(0,255,255,0.08)] overflow-hidden">
       <div className="mb-4 flex flex-col gap-3">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -93,7 +93,10 @@ export function TraxrTrustMap({ pools, selected, onSelect }: Props) {
               ? "border-amber-400/40"
               : "border-red-400/40";
           return (
-            <div key={tier} className={`rounded-2xl border ${bg} bg-white/5 p-3 backdrop-blur`}>
+          <div
+            key={tier}
+            className={`rounded-2xl border ${bg} bg-white/5 p-3 backdrop-blur overflow-hidden w-full`}
+          >
               <div className="mb-2 flex items-center justify-between">
                 <div className="text-xs uppercase tracking-[0.26em] text-white/60">CTS {tier}</div>
                 <div className="text-[11px] text-white/40">{items.length ? "Active" : "Empty"}</div>
@@ -121,7 +124,7 @@ export function TraxrTrustMap({ pools, selected, onSelect }: Props) {
                     return (
                       <div
                         key={key}
-                        className="flex cursor-pointer items-center justify-between rounded-xl bg-black/20 px-3 py-2 text-sm text-white transition hover:bg-white/10"
+                        className="flex w-full cursor-pointer items-center justify-between rounded-xl bg-black/20 px-3 py-2 text-sm text-white transition hover:bg-white/10"
                         onClick={() => {
                           onSelect?.(pool);
                           document
@@ -129,7 +132,7 @@ export function TraxrTrustMap({ pools, selected, onSelect }: Props) {
                             ?.scrollIntoView({ behavior: "smooth", block: "start" });
                         }}
                       >
-                        <span className="max-w-[70%] truncate text-white/80">
+                        <span className="flex-1 min-w-0 max-w-[70%] truncate text-white/80">
                           {nameA}/{nameB}
                         </span>
                         <span className="shrink-0 text-white/60">
@@ -689,7 +692,7 @@ function TierGraph({ pools }: { pools: TraxrScoreResult[] }) {
               d={curvePath}
               fill="none"
               stroke="rgba(0,255,180,0.5)"
-              strokeWidth={3 / zoom}
+              strokeWidth="clamp(0.6px, 0.3vw, 3px)"
               strokeLinecap="round"
               strokeLinejoin="round"
               vectorEffect="non-scaling-stroke"
@@ -700,7 +703,7 @@ function TierGraph({ pools }: { pools: TraxrScoreResult[] }) {
               d={medianPath}
               fill="none"
               stroke="rgba(255,255,255,0.35)"
-              strokeWidth={2 / zoom}
+              strokeWidth="clamp(0.5px, 0.25vw, 2px)"
               strokeDasharray="6 6"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -712,7 +715,7 @@ function TierGraph({ pools }: { pools: TraxrScoreResult[] }) {
               d={p90Path}
               fill="none"
               stroke="rgba(255,200,0,0.5)"
-              strokeWidth={2 / zoom}
+              strokeWidth="clamp(0.5px, 0.25vw, 2px)"
               strokeDasharray="2 4"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -745,7 +748,7 @@ function TierGraph({ pools }: { pools: TraxrScoreResult[] }) {
                 r={p.size}
                 fill="url(#bubble)"
                 stroke="rgba(0,255,200,0.35)"
-                strokeWidth={1 / zoom}
+                strokeWidth="clamp(0.75px, 0.35vw, 1.25px)"
                 vectorEffect="non-scaling-stroke"
                 opacity={0.9}
               />
@@ -833,11 +836,34 @@ function TierGraph({ pools }: { pools: TraxrScoreResult[] }) {
         <g className="text-[11px] fill-white/70" transform={`translate(${padding.left} ${padding.top - 8})`}>
             <rect x={0} y={-16} width={340} height={20} fill="rgba(0,0,0,0.3)" rx={6} />
           <g transform="translate(10 0)" className="flex items-center gap-3">
-            <line x1={0} y1={-6} x2={30} y2={-6} stroke="rgba(0,255,180,0.6)" strokeWidth={3} />
+            <line
+              x1={0}
+              y1={-6}
+              x2={30}
+              y2={-6}
+              stroke="rgba(0,255,180,0.6)"
+              strokeWidth="clamp(0.6px, 0.3vw, 3px)"
+            />
             <text x={36} y={-2}>Avg</text>
-            <line x1={70} y1={-6} x2={100} y2={-6} stroke="rgba(255,255,255,0.5)" strokeWidth={2} strokeDasharray="6 6" />
+            <line
+              x1={70}
+              y1={-6}
+              x2={100}
+              y2={-6}
+              stroke="rgba(255,255,255,0.5)"
+              strokeWidth="clamp(0.5px, 0.25vw, 2px)"
+              strokeDasharray="6 6"
+            />
             <text x={106} y={-2}>Median</text>
-            <line x1={150} y1={-6} x2={180} y2={-6} stroke="rgba(255,200,0,0.6)" strokeWidth={2} strokeDasharray="2 4" />
+            <line
+              x1={150}
+              y1={-6}
+              x2={180}
+              y2={-6}
+              stroke="rgba(255,200,0,0.6)"
+              strokeWidth="clamp(0.5px, 0.25vw, 2px)"
+              strokeDasharray="2 4"
+            />
             <text x={186} y={-2}>P90</text>
             <circle cx={230} cy={-6} r={6} fill="url(#bubble)" stroke="rgba(0,255,200,0.35)" />
             <text x={242} y={-2}>Liquidity</text>
@@ -906,12 +932,6 @@ function catmullRomToBezier(points: { x: number; y: number }[]) {
   }
   return res;
 }
-
-
-
-
-
-
 
 
 
