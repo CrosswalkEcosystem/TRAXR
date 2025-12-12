@@ -909,12 +909,17 @@ function TierGraph({ pools }: { pools: TraxrScoreResult[] }) {
               </button>
             </div>
             <ul className="space-y-1 text-sm text-white/80">
+              <li>
+                <b className="text-cyan-300/80">Units</b>: Liquidity and volume values are displayed in <b>XRP</b> (XRPL-native),
+                not USD. Scores and rankings are computed using relative ratios only.
+              </li>
               <li><b className="text-teal-400/80">Avg</b>: liquidity-weighted average TRAXR score per tier (solid teal).</li>
               <li><b className="text-white/50">Median</b>: mid-point of pool scores per tier (white dashed).</li>
               <li><b className="text-amber-400/80">P90</b>: 90th percentile of scores per tier (amber dotted).</li>
               <li>Liquidity bubbles: size = on-ledger liquidity for each pool; hover/tap to see pool.</li>
               <li>Pan/zoom to focus; axes update to reflect current view.</li>
             </ul>
+
           </div>
         </div>
       )}
