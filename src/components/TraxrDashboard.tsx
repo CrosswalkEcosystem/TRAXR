@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { TraxrScoreResult } from "@/lib/types";
 import { TraxrPoolCard } from "./TraxrPoolCard";
 import { TraxrTrustMap } from "./TraxrTrustMap";
-import { TraxrBadge } from "./TraxrBadge";
+import { TraxrConsole } from "./TraxrConsole";
 import { TraxrLiquidityChart } from "./TraxrLiquidityChart";
 import { useCallback } from "react";
 
@@ -179,6 +179,8 @@ export function TraxrDashboard({ pools }: Props) {
           <div id="traxr-selected-card">
             <TraxrPoolCard pool={selected} />
           </div>
+          {/* Interpretation console */}
+          <TraxrConsole pool={selected} />
           <TraxrTrustMap pools={filtered} selected={selected} onSelect={handleSelect} />
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-white/90 shadow-[0_0_30px_rgba(0,0,0,0.35)]">
             <div className="mb-3 flex items-center justify-between">
