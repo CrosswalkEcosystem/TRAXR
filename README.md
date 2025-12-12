@@ -13,7 +13,8 @@
 
 ---
 
-TRAXR is an intelligence and risk-assessment layer for XRPL liquidity. 
+TRAXR is an intelligence and risk-assessment layer for XRPL liquidity.
+All metrics are derived directly from XRPL on-ledger data and expressed in XRPL-native units unless explicitly noted otherwise.
 It evaluates AMM pools, trustlines, issuers, and market behavior to generate 
 a unified TRAXR Safety Score (0–100 → 0–6 Nodes). 
 The scoring model is modular, versioned, and designed to evolve as TRAXR’s 
@@ -57,7 +58,11 @@ npm run dev
 ---
 
 ## Fetch XRPL AMM pools to JSON (dev flow)
-The fetcher discovers AMM ledger entries via `ledger_data`, enriches them with `amm_info` (reserves, fee, LP info), and writes normalized output to `data/xrplPools.json`. Numbers are stored as USD-friendly floats for UI display (US locale formatting in the app).
+The fetcher discovers AMM ledger entries via `ledger_data`, enriches them with `amm_info` (reserves, fee, LP info), and writes normalized output to `data/xrplPools.json`.
+
+All liquidity and volume values are XRPL-native (XRP-denominated).  
+Fields may retain legacy `*Usd` naming for backward compatibility in the UI layer; no USD valuation is assumed unless explicitly stated.
+
 
 Run:
 ```
@@ -89,7 +94,8 @@ Response includes:
 - pool ID
 - TRAXR Score (0-100) and TRAXR Nodes (0-6)
 - dimension breakdown: depth, activity, impact, stability, trust, fee
-- warnings and raw metrics used for computation
+- warnings and raw XRPL-native metrics used for computation (liquidity, volume, trustlines, fees)
+
 
 Upcoming endpoints (roadmap):
 - `GET /api/traxr/pools`
@@ -105,7 +111,8 @@ Upcoming endpoints (roadmap):
 - `src/lib/traxrService.ts` – loads local XRPL pool data, caches and scores pools (uses the private scorer), fuzzy matcher for tokens/pools.
 - `src/app/api/traxr/*` - read-only HTTP surface for TRAXR consumers.
 - `src/components/*` - TRAXR badge, breakdown, trust map, liquidity visualization, warnings.
-- `scripts/fetch_xrpl_pools.js` - safe pool enumeration -> `amm_info` enrichment -> JSON export.
+- `scripts/fetch_xrpl_pools.js` - safe pool enumeration -> amm_info enrichment -> XRPL-native JSON export (bootstrap layer).
+
 
 ---
 
@@ -113,7 +120,7 @@ Upcoming endpoints (roadmap):
 1) Independent XRPL data infra: roadmap to drop XRPSCAN reliance.  
 2) Standardized safety score for XRPL (CTS-XRP) that wallets, DEX, and explorers can adopt.  
 3) Reusable analytics layer: TRAXR adds insight, not enforcement.  
-4) Transparency: clear scoring rationale, visible dimensional breakdown, and grant-ready posture.  
+4) Transparency: clear scoring rationale, visible dimensional breakdown, and explicit XRPL-native data assumptions. 
 5) Embeddable widgets: badge, trust map, liquidity view, issuer/trustline diagnostics.
 
 ---

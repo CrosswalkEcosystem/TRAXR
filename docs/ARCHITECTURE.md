@@ -7,7 +7,7 @@
 ---
 ### XRPL-Native Liquidity Intelligence Layer
 
-TRAXR is designed as a modular, extensible, and network-agnostic analytics engine for XRPL liquidity.
+TRAXR is designed as a modular, extensible, and XRPL-first analytics engine with a network-agnostic architecture.
 It provides real-time and offline scoring, issuer diagnostics, trustline aggregation, and risk
 visualization — all without requiring end-users to run any XRPL infrastructure.
 
@@ -137,9 +137,12 @@ Implements:
 - `amm_info` enrichment (reserves, volume, LP stats, fees),
 - normalization to UI-friendly floats.
 
+The fetcher may temporarily rely on XRPL public infrastructure or explorer-derived datasets for bootstrapping, but is designed to be fully replaceable by a TRAXR-owned XRPL indexer.
+
+
 ### 3.2 Normalization Goals
 - unify token identifiers (`CODE.issuer`),
-- derive liquidity and volume in USD,
+- derive liquidity and volume in XRPL-native units (XRP); USD valuation may be layered later as an optional presentation layer,
 - attach issuer metadata, flags, and trustline counts (roadmap),
 - store structural data for scoring engine.
 
