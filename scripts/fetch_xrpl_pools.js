@@ -1,18 +1,13 @@
-// Fetch XRPL AMM pools from XRPSCAN only, save to data/xrplPools.json, then enrich with XRPSCAN token metadata.
-// Roadmap: replace XRPSCAN dependency with TRAXR-run XRPL indexer to guarantee neutrality for the chain.
-// PowerShell example:
-//   cd traxr
-//   $env:XRPSCAN_URL = "https://api.xrpscan.com/api/v1/amm/pools"
-//   $env:XRPSCAN_TOKEN_BASE = "https://api.xrpscan.com/api/v1/token"
-//   $env:LIMIT = 200
-//   node scripts/fetch_xrpl_pools.js
-
 const fs = require("fs");
 const path = require("path");
 
-const XRPSCAN_URL = process.env.XRPSCAN_URL || "https://api.xrpscan.com/api/v1/amm/pools";
-const XRPSCAN_TOKEN_BASE =
+const XRPSCAN_POOLS =
+  process.env.XRPSCAN_URL || "https://api.xrpscan.com/api/v1/amm/pools";
+const XRPSCAN_TOKEN =
   process.env.XRPSCAN_TOKEN_BASE || "https://api.xrpscan.com/api/v1/token";
+const XRPSCAN_AMM =
+  process.env.XRPSCAN_AMM_BASE || "https://api.xrpscan.com/api/v1/amm";
+
 const LIMIT = Number(process.env.LIMIT || 500);
 const OUTPUT = path.join(__dirname, "..", "data", "xrplPools.json");
 
@@ -20,119 +15,202 @@ const withTimeout = (p, label) =>
   Promise.race([
     p,
     new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(`${label} timed out`)), 15_000),
+      setTimeout(() => reject(new Error(`${label} timed out`)), 15_000)
     ),
   ]);
 
 const parseCurrency = (a) => {
   if (!a?.currency) return null;
-  return a.currency === "XRP" ? "XRP" : `${a.currency}.${a.issuer ?? "unknown"}`;
+  return a.currency === "XRP"
+    ? "XRP"
+    : `${a.currency}.${a.issuer ?? "unknown"}`;
 };
 
 const toFloat = (amt) => {
   if (!amt) return 0;
   if (typeof amt === "string") {
-    const num = Number(amt);
-    return Number.isFinite(num) ? num / 1_000_000 : 0;
+    const n = Number(amt);
+    return Number.isFinite(n) ? n / 1_000_000 : 0;
   }
-  const num = Number(amt.value);
-  return Number.isFinite(num) ? num : 0;
+  const n = Number(amt.value);
+  return Number.isFinite(n) ? n : 0;
 };
 
-async function fetchPoolsFromXrpscan() {
-  console.log(`[TRAXR] Fetching pools from XRPSCAN: ${XRPSCAN_URL}`);
-  const res = await withTimeout(
-    fetch(XRPSCAN_URL, { headers: { Accept: "application/json" } }).then((r) => r.json()),
-    "xrpscan-pools",
+async function fetchAmmInfo(account) {
+  const data = await withTimeout(
+    fetch(`${XRPSCAN_AMM}/${account}`, {
+      headers: { Accept: "application/json" },
+    }).then((r) => r.json()),
+    "xrpscan-amm-info"
   );
-  if (!Array.isArray(res) || res.length === 0) {
-    throw new Error("XRPSCAN returned no pools");
-  }
+
+  return {
+    reserveXrp: toFloat(data.amount),
+    reserveIou: toFloat(data.amount2),
+  };
+}
+
+async function fetchPools() {
+  console.log("[TRAXR] Fetching AMM pools");
+  const res = await withTimeout(
+    fetch(XRPSCAN_POOLS, { headers: { Accept: "application/json" } }).then((r) =>
+      r.json()
+    ),
+    "xrpscan-pools"
+  );
+
   const pools = [];
+
   for (const entry of res) {
     const assetA = entry.Asset || entry.asset;
     const assetB = entry.Asset2 || entry.asset2;
     const mintA = parseCurrency(assetA);
     const mintB = parseCurrency(assetB);
     if (!mintA || !mintB) continue;
-    const poolId = `${mintA}_${mintB}`;
+
     pools.push({
-      id: poolId,
+      id: `${mintA}_${mintB}`,
+      ammAccount: entry.Account || entry.AMMAccount,
+      issuer: entry.Account || entry.AMMAccount || null,
+
       mintA,
       mintB,
-      issuer: entry.Account || entry.AMMAccount || null,
+
       reserveA: toFloat(entry.Amount || entry.amount || entry.Balance),
       reserveB: toFloat(entry.Amount2 || entry.amount2),
+
       tradingFee: entry.TradingFee ?? null,
       lpTokenBalance: entry.LPTokenBalance?.value
         ? Number(entry.LPTokenBalance.value)
         : null,
     });
+
     if (pools.length >= LIMIT) break;
   }
 
-  fs.mkdirSync(path.dirname(OUTPUT), { recursive: true });
-  fs.writeFileSync(OUTPUT, JSON.stringify(pools, null, 2));
-  console.log(`[TRAXR] Saved ${pools.length} pools to ${OUTPUT}`);
   return pools;
 }
 
-async function enrichPoolsWithXrpscan(pools) {
-  console.log(`[TRAXR] Enriching ${pools.length} pools with XRPSCAN token metadata`);
+async function enrichPools(pools) {
+  console.log("[TRAXR] Enriching pools with token data + amm_info");
   const out = [];
+
   for (const pool of pools) {
     const side = pool.mintA === "XRP" ? pool.mintB : pool.mintA;
-    const [code, issuer] = side ? side.split(".") : [];
-    if (!code || !issuer) {
-      out.push(pool);
-      continue;
+    const [code, issuer] = side.split(".");
+
+    let reserveA = pool.reserveA;
+    let reserveB = pool.reserveB;
+
+    // 🔹 Real on-ledger reserves fallback
+    if (reserveA === 0 && reserveB === 0 && pool.ammAccount) {
+      try {
+        const r = await fetchAmmInfo(pool.ammAccount);
+        if (pool.mintA === "XRP") {
+          reserveA = r.reserveXrp;
+          reserveB = r.reserveIou;
+        } else {
+          reserveA = r.reserveIou;
+          reserveB = r.reserveXrp;
+        }
+      } catch {}
     }
+
+    let tokenMeta = {};
+    let tokenPriceXrp = 0;
+
     try {
       const t = await withTimeout(
-        fetch(`${XRPSCAN_TOKEN_BASE}/${code}.${issuer}`, {
+        fetch(`${XRPSCAN_TOKEN}/${code}.${issuer}`, {
           headers: { Accept: "application/json" },
         }).then((r) => r.json()),
-        "xrpscan-token",
+        "xrpscan-token"
       );
-      out.push({
-        ...pool,
+
+      tokenPriceXrp = Number(t.price ?? t.metrics?.price ?? 0);
+
+      tokenMeta = {
         tokenCode: t.code || code,
         tokenIssuer: t.issuer || issuer,
-        tokenName: t.meta?.token?.name || t.meta?.issuer?.name || t.code || code,
-        tokenPrice: Number(t.price ?? t.metrics?.price ?? 0),
-        tokenMarketcap: Number(t.marketcap ?? t.metrics?.marketcap ?? 0),
+        tokenName:
+          t.meta?.token?.name ||
+          t.meta?.issuer?.name ||
+          t.code ||
+          code,
+
+        tokenPriceXrp,
         tokenSupply: Number(t.supply ?? t.metrics?.supply ?? 0),
+        tokenMarketcapXrp: Number(
+          t.marketcap ?? t.metrics?.marketcap ?? 0
+        ),
+
         tokenTrustlines: Number(t.metrics?.trustlines ?? 0),
         tokenHolders: Number(t.metrics?.holders ?? 0),
-        tokenVolume24h: Number(t.metrics?.volume_24h ?? 0),
-        tokenVolume7d: Number(t.metrics?.volume_7d ?? 0),
+        tokenVolume24hXrp: Number(t.metrics?.volume_24h ?? 0),
+        tokenVolume7dXrp: Number(t.metrics?.volume_7d ?? 0),
         tokenExchanges24h: Number(t.metrics?.exchanges_24h ?? 0),
-        tokenExchanges7d: Number(t.metrics?.exchanges_7d ?? 0),
         tokenTakers24h: Number(t.metrics?.takers_24h ?? 0),
-        tokenTakers7d: Number(t.metrics?.takers_7d ?? 0),
-        tokenTrustLevel: t.meta?.token?.trust_level ?? t.meta?.issuer?.trust_level ?? null,
+
+        tokenTrustLevel:
+          t.meta?.token?.trust_level ??
+          t.meta?.issuer?.trust_level ??
+          null,
+
         tokenBlackholed: t.blackholed ?? false,
         issuerVerified: t.IssuingAccount?.verified ?? false,
         tokenUpdatedAt: t.updatedAt || null,
         tokenScore: t.score ?? null,
-      });
-    } catch (e) {
-      console.warn(`Skip ${side}: ${e && e.message ? e.message : e}`);
-      out.push(pool);
+      };
+    } catch {}
+
+    const xrpReserve =
+      pool.mintA === "XRP" ? reserveA : reserveB;
+    const iouReserve =
+      pool.mintA === "XRP" ? reserveB : reserveA;
+
+    // 🔒 PRICE CONFIDENCE (market confirmation)
+    const priceConfidence =
+      tokenPriceXrp > 0 &&
+      (
+        tokenMeta.tokenVolume24hXrp >= 1000 ||
+        tokenMeta.tokenTakers24h >= 25 ||
+        tokenMeta.tokenExchanges24h >= 100
+      );
+
+    let tvlXrp = null;
+    let tvlLevel = "unknown";
+
+    if (xrpReserve > 0 && priceConfidence) {
+      tvlXrp = xrpReserve + iouReserve * tokenPriceXrp;
+      tvlLevel = "realistic";
+    } else if (xrpReserve > 0) {
+      tvlXrp = xrpReserve;
+      tvlLevel = "partial";
     }
+
+    out.push({
+      ...pool,
+      reserveA,
+      reserveB,
+      ...tokenMeta,
+      tvlXrp,
+      tvlLevel,
+      priceConfidence,
+    });
   }
-  console.log("[TRAXR] Enrichment complete.");
+
   return out;
 }
 
 (async () => {
   try {
-    const pools = await fetchPoolsFromXrpscan();
-    const enriched = await enrichPoolsWithXrpscan(pools);
+    const pools = await fetchPools();
+    const enriched = await enrichPools(pools);
+    fs.mkdirSync(path.dirname(OUTPUT), { recursive: true });
     fs.writeFileSync(OUTPUT, JSON.stringify(enriched, null, 2));
-    console.log("[TRAXR] Saved enriched pools (no scoring in script).");
+    console.log(`[TRAXR] Saved ${enriched.length} final pools.`);
   } catch (e) {
-    console.error("[TRAXR] fetch_xrpl_pools failed", e);
+    console.error("[TRAXR] fetch failed", e);
     process.exit(1);
   }
 })();
