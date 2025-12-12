@@ -57,17 +57,20 @@ export function TraxrTrustMap({ pools, selected, onSelect }: Props) {
                   <span>Score {hero.score}</span>
                   <span>Trustlines {(hero.metrics?.trustlines ?? 0).toLocaleString("en-US")}</span>
                   <span>
-                    24h Vol $
+                    24h Vol&nbsp;
                     {(hero.metrics?.volume24hUsd ?? 0).toLocaleString("en-US", {
-                      maximumFractionDigits: 2,
-                    })}
+                      maximumFractionDigits: 0,
+                    })}{" "}
+                    XRP
                   </span>
                   <span>
-                    Liq $
+                    Liq&nbsp;
                     {(hero.metrics?.liquidityUsd ?? 0).toLocaleString("en-US", {
-                      maximumFractionDigits: 2,
-                    })}
+                      maximumFractionDigits: 0,
+                    })}{" "}
+                    XRP
                   </span>
+
                 </div>
                 <div className="text-[11px] text-white/50">
                   Updated {hero.updatedAt ? new Date(hero.updatedAt).toLocaleString() : "n/a"}
@@ -136,9 +139,10 @@ export function TraxrTrustMap({ pools, selected, onSelect }: Props) {
                           {nameA}/{nameB}
                         </span>
                         <span className="shrink-0 text-white/60">
-                          Liq $
-                          {liq.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+                          Liq&nbsp;
+                          {liq.toLocaleString("en-US", { maximumFractionDigits: 0 })} XRP
                         </span>
+
                       </div>
                     );
                   })
@@ -233,9 +237,10 @@ export function TraxrTrustMap({ pools, selected, onSelect }: Props) {
                                 {nameA}/{nameB}
                               </span>
                               <span className="shrink-0 text-white/60">
-                                Liq $
-                                {liq.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+                                Liq&nbsp;
+                                {liq.toLocaleString("en-US", { maximumFractionDigits: 0 })} XRP
                               </span>
+
                             </div>
                           </div>
                         );
