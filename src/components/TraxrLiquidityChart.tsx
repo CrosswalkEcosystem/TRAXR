@@ -84,11 +84,12 @@ export function TraxrLiquidityChart({ pools }: Props) {
               </a>
               <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-white/70">
                 <span>
-                  Liq ${p.liq.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+                  Liq {p.liq.toLocaleString("en-US", { maximumFractionDigits: 0 })} XRP
                 </span>
                 <span>
-                  24h Vol ${p.vol24.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+                  24h Vol {p.vol24.toLocaleString("en-US", { maximumFractionDigits: 0 })} XRP
                 </span>
+
               </div>
             </div>
             <div className="space-y-2">

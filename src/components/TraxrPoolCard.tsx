@@ -36,7 +36,7 @@ export function TraxrPoolCard({ pool }: Props) {
 
   const trustlines = typeof m.trustlines === "number" ? m.trustlines : 0;
 
-  const isBlackholed = m.tokenBlackholed === true;
+  const isBlackholed = m.blackholed === true;
 
   const tvlXrp = m.tvlXrp ?? null;
   const tvlLevel = m.tvlLevel ?? "unknown";
