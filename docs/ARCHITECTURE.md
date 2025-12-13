@@ -146,6 +146,16 @@ The fetcher may temporarily rely on XRPL public infrastructure or explorer-deriv
 - attach issuer metadata, flags, and trustline counts (roadmap),
 - store structural data for scoring engine.
 
+### 3.3 Stability & Historical Data Constraints
+
+In the current MVP architecture, TRAXR operates on snapshot-based datasets
+without continuous historical replay.
+
+As a result, the **Stability** dimension is currently normalized across all pools.
+True volatility-aware stability assessment requires continuous time-series
+sampling, which will be enabled once TRAXR transitions to a native XRPL indexer
+with historical ledger access.
+
 ---
 
 # 4. Data Flow Diagram

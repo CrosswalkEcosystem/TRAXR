@@ -97,16 +97,27 @@ export default function Home() {
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
                   Manual refresh • Cache regenerates on sync
                 </span>
-                <div className="mt-6 flex flex-wrap items-center gap-4">
+                <div className="mt-6 text-sm text-white/60">
                   <a
                     href="/methodology"
-                    className="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/20 transition"
+                    className="underline decoration-dashed underline-offset-4 decoration-white/40 hover:decoration-cyan-300 transition"
                   >
-                    How TRAXR Works
+                    Methodology
                   </a>
-                  <span className="text-xs text-white/50">
-                    Methodology · Data model · Infrastructure roadmap
-                  </span>
+                  <span className="mx-2 text-white/40">·</span>
+                  <a
+                    href="/architecture"
+                    className="underline decoration-dashed underline-offset-4 decoration-white/40 hover:decoration-cyan-300 transition"
+                  >
+                    Architecture
+                  </a>
+                  <span className="mx-2 text-white/40">·</span>
+                  <a
+                    href="/data-model"
+                    className="underline decoration-dashed underline-offset-4 decoration-white/40 hover:decoration-cyan-300 transition"
+                  >
+                    Data model
+                  </a>
                 </div>
               </div>
             </div>
@@ -165,6 +176,18 @@ export default function Home() {
               className="hover:text-white"
             >
               Methodology
+            </a>
+            <a
+              href="/architecture"
+              className="hover:text-white"
+            >
+              Architecture
+            </a>
+            <a
+              href="/data-model"
+              className="hover:text-white"
+            >
+              Data Model
             </a>
             <a
               href="https://crosswalk.pro"

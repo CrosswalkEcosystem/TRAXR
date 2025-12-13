@@ -1,5 +1,5 @@
 import Image from "next/image";
-import BackButton from "../../components/BackButton";
+import BackButton from "@/components/BackButton";
 
 export const metadata = {
   title: "How TRAXR Works — Methodology",
@@ -132,6 +132,22 @@ export default function MethodologyPage() {
                 </li>
               </ul>
             </section>
+            {/* STABILITY NOTE */}
+            <section className="mt-8 rounded-md border border-cyan-400/20 bg-cyan-400/5 p-4">
+            <h3 className="text-sm font-medium uppercase tracking-[0.2em] text-cyan-300">
+                Stability in MVP Mode
+            </h3>
+            <p className="mt-2 text-sm text-slate-300">
+                Stability reflects temporal consistency of pool behavior.
+                In the current MVP phase, <b>Stability is normalized across all pools</b>.
+            </p>
+            <p className="mt-2 text-sm text-slate-300">
+                Volatility-aware stability assessment requires continuous historical
+                time-series data, which will be enabled once TRAXR operates on
+                native XRPL indexing infrastructure.
+            </p>
+            </section>
+
 
             {/* MVP DATA MODEL */}
             <section className="mt-10 rounded-lg border border-yellow-400/30 bg-yellow-400/5 p-5">
@@ -189,6 +205,18 @@ export default function MethodologyPage() {
               className="hover:text-white"
             >
               GitHub
+            </a>
+            <a
+              href="/architecture"
+              className="hover:text-white"
+            >
+              Architecture
+            </a>
+            <a
+              href="/data-model"
+              className="hover:text-white"
+            >
+              Data Model
             </a>
             <a
               href="https://crosswalk.pro"

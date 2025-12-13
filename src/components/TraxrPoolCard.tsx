@@ -177,14 +177,29 @@ export function TraxrPoolCard({ pool }: Props) {
             </div>
           </div>
 
-          {/* Volatility placeholder (XRPL-native later) */}
+          {/* Stability / Volatility (MVP disclosure) */}
           <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2">
-            <div className="text-[11px] uppercase tracking-[0.2em] text-white/40">
-              Volatility
+            <div className="flex items-center justify-between">
+              <div className="text-[11px] uppercase tracking-[0.2em] text-white/40">
+                Stability
+              </div>
+              <span className="text-[10px] uppercase tracking-wider text-white/30">
+                MVP
+              </span>
             </div>
-            <div className="text-sm sm:text-base font-semibold text-white">
-              —
-            </div>
+            <div className="flex items-center gap-2 text-sm sm:text-base font-semibold text-white">
+  <span>Max (normalized)</span>
+
+  <span className="group relative inline-flex items-center">
+    <span className="cursor-help text-xs text-white/40">ⓘ</span>
+
+    {/* tooltip */}
+    <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 w-48 -translate-x-1/2 rounded-md border border-white/10 bg-black/90 px-3 py-2 text-xs text-slate-300 opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+      Volatility-based stability is normalized in MVP mode.
+    </span>
+  </span>
+</div>
+
           </div>
         </div>
       </div>
