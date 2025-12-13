@@ -97,6 +97,17 @@ export default function Home() {
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
                   Manual refresh • Cache regenerates on sync
                 </span>
+                <div className="mt-6 flex flex-wrap items-center gap-4">
+                  <a
+                    href="/methodology"
+                    className="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/20 transition"
+                  >
+                    How TRAXR Works
+                  </a>
+                  <span className="text-xs text-white/50">
+                    Methodology · Data model · Infrastructure roadmap
+                  </span>
+                </div>
               </div>
             </div>
             <div className="flex lg:w-5/12 xl:w-1/3 items-center justify-center lg:justify-end lg:min-h-[320px]">
@@ -113,6 +124,7 @@ export default function Home() {
             </div>
           </div>
         </section>
+        
 
         {loading ? (
           <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 p-6 text-white/80 backdrop-blur">
@@ -147,6 +159,12 @@ export default function Home() {
               className="hover:text-white"
             >
               GitHub
+            </a>
+            <a
+              href="/methodology"
+              className="hover:text-white"
+            >
+              Methodology
             </a>
             <a
               href="https://crosswalk.pro"
