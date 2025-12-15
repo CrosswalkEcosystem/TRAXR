@@ -126,7 +126,8 @@ export function RollingStats({
         <Bubble
           label="Signals"
           value={signals}
-          tooltip="Pools with non-informational liquidity, activity, or trust signals."
+          tooltip="Pools where TRAXR detected at least one meaningful signal related to liquidity, trading activity, or issuer trust."
+
         />
         <Bubble
           label="Elevated"
