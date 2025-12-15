@@ -64,14 +64,20 @@ async function fetchPools() {
   for (const entry of res) {
     const assetA = entry.Asset || entry.asset;
     const assetB = entry.Asset2 || entry.asset2;
+
     const mintA = parseCurrency(assetA);
     const mintB = parseCurrency(assetB);
     if (!mintA || !mintB) continue;
 
+    const ammAccount = entry.Account || entry.AMMAccount || null;
+
     pools.push({
       id: `${mintA}_${mintB}`,
-      ammAccount: entry.Account || entry.AMMAccount,
-      issuer: entry.Account || entry.AMMAccount || null,
+
+      // ✅ Pool identity (AMM account)
+      ammAccount,
+
+      // ❗ DO NOT store "issuer" here — AMM ≠ issuer
 
       mintA,
       mintB,
@@ -102,7 +108,7 @@ async function enrichPools(pools) {
     let reserveA = pool.reserveA;
     let reserveB = pool.reserveB;
 
-    // 🔹 Real on-ledger reserves fallback
+    // 🔹 On-ledger reserve fallback
     if (reserveA === 0 && reserveB === 0 && pool.ammAccount) {
       try {
         const r = await fetchAmmInfo(pool.ammAccount);
@@ -131,7 +137,10 @@ async function enrichPools(pools) {
 
       tokenMeta = {
         tokenCode: t.code || code,
+
+        // ✅ REAL XRPL ISSUER
         tokenIssuer: t.issuer || issuer,
+
         tokenName:
           t.meta?.token?.name ||
           t.meta?.issuer?.name ||
@@ -168,7 +177,7 @@ async function enrichPools(pools) {
     const iouReserve =
       pool.mintA === "XRP" ? reserveB : reserveA;
 
-    // 🔒 PRICE CONFIDENCE (market confirmation)
+    // 🔒 Price confidence
     const priceConfidence =
       tokenPriceXrp > 0 &&
       (
@@ -206,8 +215,10 @@ async function enrichPools(pools) {
   try {
     const pools = await fetchPools();
     const enriched = await enrichPools(pools);
+
     fs.mkdirSync(path.dirname(OUTPUT), { recursive: true });
     fs.writeFileSync(OUTPUT, JSON.stringify(enriched, null, 2));
+
     console.log(`[TRAXR] Saved ${enriched.length} final pools.`);
   } catch (e) {
     console.error("[TRAXR] fetch failed", e);
