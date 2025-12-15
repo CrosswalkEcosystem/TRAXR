@@ -10,17 +10,23 @@ export type TraxrNodeBreakdown = {
 
 // Core normalized metrics for XRPL AMM pools
 export type XRPLPoolMetrics = {
+  // ----------------------------------
   // Pool identity
+  // ----------------------------------
   poolId: string;
   mintA: string;
   mintB: string;
-  issuer?: string;
+
+  // AMM ledger account (pool identity)
   ammAccount?: string;
 
-
-  // Token metadata
+  // ----------------------------------
+  // Token metadata (XRPL IOU semantics)
+  // ----------------------------------
   tokenName?: string;
   tokenCode?: string;
+
+  // ✅ REAL XRPL ISSUER (non-XRP only)
   tokenIssuer?: string;
 
   // ----------------------------------
@@ -56,7 +62,7 @@ export type XRPLPoolMetrics = {
   dataAgeHours?: number;
 
   // ----------------------------------
-  // ✅ XRPL-native truth (NEW)
+  // XRPL-native truth
   // ----------------------------------
 
   // Real pool TVL calculated from reserves (XRP)

@@ -2,75 +2,55 @@ import { XRPLPoolMetrics } from "./types";
 
 export const SAMPLE_POOLS: XRPLPoolMetrics[] = [
   {
-    poolId: "xrpl_csw_xrp",
-    mintA: "CSW",
-    mintB: "XRP",
-    issuer: "rXRPLIssuer",
-    liquidityUsd: 1480000,
-    volume24hUsd: 215000,
-    volume7dUsd: 1240000,
-    tx24h: 1820,
-    tx7d: 9200,
-    feePct: 0.25,
-    volatilityPct: 0.07,
-    trustlines: 18345,
-    priceImpactPct: 0.36,
-    dataAgeHours: 0.8,
+    // ----------------------------------
+    // Pool identity
+    // ----------------------------------
+    poolId:
+      "XRP_43525950544F0000000000000000000000000000.rRbiKwcueo6MchUpMFDce9XpDwHhRLPFo",
+    mintA: "XRP",
+    mintB: "CRYPTO",
+
+    // AMM ledger account (pool)
+    ammAccount: "rLjUKpwUVmz3vCTmFkXungxwzdoyrWRsFG",
+
+    // ----------------------------------
+    // Token-level metadata (XRPL IOU)
+    // ----------------------------------
+    tokenCode: "CRYPTO",
+    tokenName: "CryptoLand",
+    tokenIssuer: "rRbiKwcueo6MchUpMFDce9XpDwHhRLPFo",
+
+    // ----------------------------------
+    // Legacy UI / scorer fields
+    // (XRPL-native values, labelled as USD for now)
+    // ----------------------------------
+    liquidityUsd: 2_949_601.711352,
+    volume24hUsd: 651.710414,
+    volume7dUsd: 4_483.408065,
+
+    tx24h: 50,
+    tx7d: null,
+
+    feePct: 0.0864, // 864 / 10_000
+    volatilityPct: null,
+
+    trustlines: 4_195,
+
+    priceImpactPct: null,
+    dataAgeHours: 0.1,
+
+    // ----------------------------------
+    // Risk flags
+    // ----------------------------------
     blacklisted: false,
+    blackholed: true,
     freezeEnabled: false,
-  },
-  {
-    poolId: "xrpl_core_xrp",
-    mintA: "CORE",
-    mintB: "XRP",
-    issuer: "rCoreGateway",
-    liquidityUsd: 865000,
-    volume24hUsd: 127000,
-    volume7dUsd: 678000,
-    tx24h: 980,
-    tx7d: 5440,
-    feePct: 0.3,
-    volatilityPct: 0.11,
-    trustlines: 13980,
-    priceImpactPct: 0.8,
-    dataAgeHours: 1.1,
-    blacklisted: false,
-    freezeEnabled: false,
-  },
-  {
-    poolId: "xrpl_usdc_xrp",
-    mintA: "USDC",
-    mintB: "XRP",
-    issuer: "rCentreIssuer",
-    liquidityUsd: 2365000,
-    volume24hUsd: 425000,
-    volume7dUsd: 2215000,
-    tx24h: 3112,
-    tx7d: 15611,
-    feePct: 0.15,
-    volatilityPct: 0.03,
-    trustlines: 24311,
-    priceImpactPct: 0.2,
-    dataAgeHours: 0.4,
-    blacklisted: false,
-    freezeEnabled: false,
-  },
-  {
-    poolId: "xrpl_mem_xrp",
-    mintA: "MEME",
-    mintB: "XRP",
-    issuer: "rMemeIssuer",
-    liquidityUsd: 92000,
-    volume24hUsd: 8500,
-    volume7dUsd: 40100,
-    tx24h: 62,
-    tx7d: 320,
-    feePct: 0.35,
-    volatilityPct: 0.21,
-    trustlines: 2200,
-    priceImpactPct: 2.8,
-    dataAgeHours: 5.5,
-    blacklisted: false,
-    freezeEnabled: true,
+
+    // ----------------------------------
+    // XRPL-native truth
+    // ----------------------------------
+    tvlXrp: 2_949_601.711352,
+    tvlLevel: "partial",
+    priceConfidence: false,
   },
 ];

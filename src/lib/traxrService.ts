@@ -177,21 +177,19 @@ function normalizePool(p: any): XRPLPoolMetrics {
 
   // 👉 XRPL-native liquidity (XRP, not USD)
   const liquidityXrp =
-  typeof p.tvlXrp === "number" && p.tvlXrp > 0
-    ? p.tvlXrp
-    : typeof p.reserveA === "number"
-      ? p.reserveA
-      : 0;
-
+    typeof p.tvlXrp === "number" && p.tvlXrp > 0
+      ? p.tvlXrp
+      : typeof p.reserveA === "number"
+        ? p.reserveA
+        : 0;
 
   // 👉 XRPL-native volume
   const volume24hXrp =
-  typeof p.tokenVolume24hXrp === "number"
-    ? p.tokenVolume24hXrp
-    : typeof p.volume24hXrp === "number"
-      ? p.volume24hXrp
-      : 0;
-
+    typeof p.tokenVolume24hXrp === "number"
+      ? p.tokenVolume24hXrp
+      : typeof p.volume24hXrp === "number"
+        ? p.volume24hXrp
+        : 0;
 
   const volume7dXrp =
     p.tokenVolume7dXrp ??
@@ -202,8 +200,11 @@ function normalizePool(p: any): XRPLPoolMetrics {
     poolId,
     mintA: p.mintA,
     mintB: p.mintB,
-    issuer: p.issuer,
 
+    // ✅ pool identity
+    ammAccount: p.ammAccount,
+
+    // ✅ token-level metadata
     tokenName: p.tokenName,
     tokenCode: p.tokenCode,
     tokenIssuer: p.tokenIssuer,
@@ -212,8 +213,7 @@ function normalizePool(p: any): XRPLPoolMetrics {
     /* Backward-compatible fields     */
     /* ------------------------------- */
 
-    // UI + scorer still expect *Usd fields → map XRP → USD later if needed
-    liquidityUsd: liquidityXrp, // ⚠️ intentionally XRP (labelled later in UI)
+    liquidityUsd: liquidityXrp, // XRPL-native, labelled later
     volume24hUsd: volume24hXrp,
     volume7dUsd: volume7dXrp,
 
@@ -245,7 +245,7 @@ function normalizePool(p: any): XRPLPoolMetrics {
     dataAgeHours: p.dataAgeHours ?? 0,
 
     /* ------------------------------- */
-    /* Preserve extra XRPL metadata   */
+    /* XRPL-native truth              */
     /* ------------------------------- */
 
     tvlXrp: p.tvlXrp ?? null,
@@ -253,3 +253,4 @@ function normalizePool(p: any): XRPLPoolMetrics {
     priceConfidence: p.priceConfidence ?? false,
   };
 }
+
