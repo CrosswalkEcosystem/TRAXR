@@ -79,7 +79,7 @@ async function refreshCache() {
       ctsNodes,
       nodes,
       warnings: buildWarnings(p, nodes),
-      updatedAt: p.tokenUpdatedAt || p.updatedAt || new Date().toISOString(),
+      updatedAt: p.tokenUpdatedAt || new Date().toISOString(),
 
       // 👇 CRITICAL: pass metrics exactly as normalized
       metrics: p,
@@ -208,7 +208,7 @@ function normalizePool(p: any): XRPLPoolMetrics {
     tokenName: p.tokenName,
     tokenCode: p.tokenCode,
     tokenIssuer: p.tokenIssuer,
-    tokenUpdatedAt: p.tokenUpdatedAt || p.updatedAt || null,
+    tokenUpdatedAt: typeof p.tokenUpdatedAt === "string" ? p.tokenUpdatedAt : undefined,
 
     /* ------------------------------- */
     /* Backward-compatible fields     */
