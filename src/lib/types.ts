@@ -98,3 +98,37 @@ export type TraxrScoreResult = {
   tokenCode?: string;
   tokenIssuer?: string;
 };
+// -------------------------------
+// TRAXR Console semantic layer
+// -------------------------------
+
+// Canonical metric identifiers used by the Console brain
+export type TraxrMetric =
+  | "DEPTH"
+  | "ACTIVITY"
+  | "IMPACT"
+  | "STABILITY"
+  | "TRUST"
+  | "FEE";
+
+// Interaction archetypes between metrics
+export type MetricInteraction =
+  | "USAGE_EFFICIENCY"
+  | "LIQUIDITY_STRESS"
+  | "FALSE_SECURITY"
+  | "RISK_AMPLIFICATION"
+  | "COST_PRESSURE"
+  | "STRUCTURAL_CONTEXT";
+
+// Normalized metric pair key
+export type MetricPairKey = `${TraxrMetric}:${TraxrMetric}`;
+
+// Mapping from TraxrNodeBreakdown keys to TraxrMetric identifiers
+export const nodeKeyToMetric: Record<keyof TraxrNodeBreakdown, TraxrMetric> = {
+  depth: "DEPTH",
+  activity: "ACTIVITY",
+  impact: "IMPACT",
+  stability: "STABILITY",
+  trust: "TRUST",
+  fee: "FEE",
+};

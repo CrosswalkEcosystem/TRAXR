@@ -2,6 +2,109 @@
 // Deterministic • Non-evaluative • Context-aware
 // Interpretation layer (not oracle)
 
+type InteractionArchetype =
+  | "USAGE_EFFICIENCY"
+  | "LIQUIDITY_STRESS"
+  | "FALSE_SECURITY"
+  | "ADOPTION_DYNAMICS"
+  | "COST_PRESSURE"
+  | "STRUCTURAL";
+
+const PAIR_ARCHETYPES: Record<PairKey, InteractionArchetype> = {
+  activity_depth: "USAGE_EFFICIENCY",
+  depth_impact: "LIQUIDITY_STRESS",
+  depth_stability: "FALSE_SECURITY",
+  activity_stability: "USAGE_EFFICIENCY",
+  activity_trust: "ADOPTION_DYNAMICS",
+  depth_trust: "ADOPTION_DYNAMICS",
+  activity_fee: "COST_PRESSURE",
+};
+
+type TripleArchetype =
+  | "MARKET_STRUCTURE"
+  | "EXECUTION_PROFILE"
+  | "ADOPTION_FLOW"
+  | "RISK_SURFACE"
+  | "STRUCTURAL";
+
+const TRIPLE_ARCHETYPES: Partial<Record<TripleKey, TripleArchetype>> = {
+  activity_depth_stability: "MARKET_STRUCTURE",
+  activity_depth_impact: "EXECUTION_PROFILE", // ✅ FIX
+  activity_trust_depth: "ADOPTION_FLOW",
+};
+
+
+const TRIPLE_ARCHETYPE_EXPLANATIONS: Record<TripleArchetype, Explanation> = {
+  MARKET_STRUCTURE: {
+    title: "Market Structure",
+    body:
+      "Liquidity, trading behavior, and price stability together describe the structural resilience of the pool.",
+  },
+
+  EXECUTION_PROFILE: {
+    title: "Execution Profile",
+    body:
+      "Liquidity depth, usage, and price impact collectively determine execution quality under trade pressure.",
+  },
+
+  ADOPTION_FLOW: {
+    title: "Adoption Flow",
+    body:
+      "Trustline participation, liquidity, and activity show how adoption translates into market presence.",
+  },
+
+  RISK_SURFACE: {
+    title: "Risk Surface",
+    body:
+      "Multiple risk-related dimensions combine to shape the pool’s exposure profile.",
+  },
+
+  STRUCTURAL: {
+    title: "Context Overview",
+    body:
+      "The selected metrics together provide high-level structural context.",
+  },
+};
+
+
+const ARCHETYPE_EXPLANATIONS: Record<InteractionArchetype, Explanation> = {
+  USAGE_EFFICIENCY: {
+    title: "Usage vs Liquidity",
+    body:
+      "This combination evaluates how actively available liquidity is being used within the pool.",
+  },
+
+  LIQUIDITY_STRESS: {
+    title: "Liquidity Stress",
+    body:
+      "This combination examines how liquidity depth responds to trade pressure and price sensitivity.",
+  },
+
+  FALSE_SECURITY: {
+    title: "Stability vs Size",
+    body:
+      "Liquidity size alone does not guarantee stable price behavior under changing conditions.",
+  },
+
+  ADOPTION_DYNAMICS: {
+    title: "Adoption Dynamics",
+    body:
+      "Liquidity and trustline participation together reflect how adoption translates into market depth.",
+  },
+
+  COST_PRESSURE: {
+    title: "Cost Pressure",
+    body:
+      "Fees influence whether participation remains active or becomes constrained.",
+  },
+
+  STRUCTURAL: {
+    title: "Context Overview",
+    body:
+      "The selected metrics together provide structural context for interpreting this pool.",
+  },
+};
+
 export type TraxrNodes = {
   depth: number;
   activity: number;
@@ -197,6 +300,17 @@ type PairBandKey =
   | "mid_low" | "mid_mid" | "mid_high"
   | "high_low" | "high_mid" | "high_high";
 
+const PAIR_ORDER: Record<PairKey, [keyof TraxrNodes, keyof TraxrNodes]> = {
+  activity_depth: ["activity", "depth"],
+  depth_impact: ["depth", "impact"],
+  depth_stability: ["depth", "stability"],
+  activity_stability: ["activity", "stability"],
+  activity_trust: ["activity", "trust"],
+  depth_trust: ["depth", "trust"],
+  activity_fee: ["activity", "fee"],
+};
+
+
 
 const PAIRS: Partial<Record<
   PairKey,
@@ -211,7 +325,7 @@ const PAIRS: Partial<Record<
         "The pool combines strong liquidity with frequent usage, indicating healthy execution conditions.",
     },
     high_low: {
-      title: "Retail-Driven Usage",
+      title: "Small-Driven Usage",
       body:
         "Trading activity exists despite limited liquidity, suggesting frequent small trades.",
     },
@@ -477,31 +591,28 @@ const PAIRS: Partial<Record<
 
 type TripleKey =
   | "activity_depth_stability"
-  | "depth_activity_impact"
+  | "activity_depth_impact"
   | "activity_trust_depth";
 
-const TRIPLES: Record<
-  TripleKey,
-  (nodes: TraxrNodes) => Explanation
-> = {
-  activity_depth_stability: (n) => ({
-    title: "Market Structure",
-    body:
-      "Liquidity, trading behavior, and price dynamics together describe the overall resilience of this pool.",
-  }),
+// ----------------------------------
+// Dev-time integrity checks
+// ----------------------------------
+if (process.env.NODE_ENV !== "production") {
+  for (const key of Object.keys(PAIRS) as PairKey[]) {
+    if (!PAIR_ORDER[key]) {
+      console.warn(`[TRAXR] Missing PAIR_ORDER for ${key}`);
+    }
+  }
 
-  depth_activity_impact: (n) => ({
-    title: "Execution Profile",
-    body:
-      "Liquidity depth, usage, and price sensitivity collectively determine execution quality.",
-  }),
+  for (const key of Object.keys(TRIPLE_ARCHETYPES) as TripleKey[]) {
+    if (!TRIPLE_ARCHETYPE_EXPLANATIONS[TRIPLE_ARCHETYPES[key]!]) {
+      console.warn(
+        `[TRAXR] Missing triple archetype explanation for ${key}`
+      );
+    }
+  }
+}
 
-  activity_trust_depth: (n) => ({
-    title: "Adoption Dynamics",
-    body:
-      "Trustline participation, liquidity, and usage reflect how adoption translates into market activity.",
-  }),
-};
 
 /* --------------------------------------------------
  * 5. MAIN CONTEXTUAL DISPATCH
@@ -518,24 +629,35 @@ export function getContextualExplanationForSelection(
   // 3-metric
   if (selected.length === 3) {
     const key = tripleKey(selected[0], selected[1], selected[2]);
-    const fn = TRIPLES[key];
-    if (fn) return [fn(nodes)];
+    const archetype = TRIPLE_ARCHETYPES[key] ?? "STRUCTURAL";
+    return [TRIPLE_ARCHETYPE_EXPLANATIONS[archetype]];
   }
 
   // 2-metric
   if (selected.length === 2) {
     const [a, b] = selected;
     const key = pairKey(a, b);
+
+    // 1️⃣ Try band-specific explanation
     const map = PAIRS[key];
-
     if (map) {
-        const va = band(nodes[a]);
-        const vb = band(nodes[b]);
-        const entry = map[`${va}_${vb}` as PairBandKey];
-
+      const order = PAIR_ORDER[key];
+      if (order) {
+        const [first, second] = order;
+        const v1 = band(nodes[first]);
+        const v2 = band(nodes[second]);
+        const entry = map[`${v1}_${v2}` as PairBandKey];
         if (entry) return [entry];
+      }
+
+      
     }
+
+    // 2️⃣ Fallback to archetype explanation (still meaningful)
+    const archetype = PAIR_ARCHETYPES[key] ?? "STRUCTURAL";
+    return [ARCHETYPE_EXPLANATIONS[archetype]];
   }
+
 
 
   // Fallback (never empty)
