@@ -29,6 +29,9 @@ export type XRPLPoolMetrics = {
   // ✅ REAL XRPL ISSUER (non-XRP only)
   tokenIssuer?: string;
 
+  // Last refresh timestamp for token metadata/pool data (from source feed)
+  tokenUpdatedAt?: string;
+
   // ----------------------------------
   // UI + scorer legacy fields
   // (kept for backward compatibility)
