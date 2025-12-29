@@ -6,6 +6,7 @@ import Image from "next/image";
 
 type Props = {
   pool: TraxrScoreResult;
+  onCompare?: () => void;
 };
 
 function band(score: number) {
@@ -15,7 +16,7 @@ function band(score: number) {
 }
 
 // TRAXR pool card shows score, CTS nodes, and truthful XRPL-native metrics.
-export function TraxrPoolCard({ pool }: Props) {
+export function TraxrPoolCard({ pool, onCompare }: Props) {
   const m: any = pool.metrics || pool;
 
   const nameA = tokenDisplay({
@@ -77,6 +78,15 @@ export function TraxrPoolCard({ pool }: Props) {
             CTS {pool.ctsNodes}
           </span>
         </div>
+        {onCompare ? (
+          <button
+            type="button"
+            onClick={onCompare}
+            className="ml-auto rounded-full border border-cyan-400/40 bg-cyan-500/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100 shadow-[0_0_14px_rgba(0,255,255,0.2)] transition hover:border-cyan-300 hover:text-white"
+          >
+            Compare
+          </button>
+        ) : null}
       </div>
 
       {/* Left column */}

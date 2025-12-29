@@ -43,7 +43,7 @@ A real-time interactive dashboard providing:
 - TRAXR Score (0–100) and TRAXR Nodes (0–6),  
 - dimensional breakdown (depth, activity, impact, stability, trust, fee),  
 - warnings module and risk heuristics,  
-- liquidity charts, trust map, tiering view, and issuer insights.  
+- liquidity charts, trust map, tiering view, issuer insights, and pool comparison.  
 
 The frontend is fully decoupled from the scoring logic — it receives precomputed analytics from the API.
 
@@ -255,4 +255,3 @@ TRAXR is engineered for long-term growth:
 - extensible framework for future blockchains and analytics layers.
 
 The architecture ensures TRAXR can evolve from a dashboard into the **standard safety signal for XRPL liquidity**.
-

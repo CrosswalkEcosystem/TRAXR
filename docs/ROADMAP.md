@@ -34,7 +34,8 @@ Delivered:
   - dimensional breakdown,
   - warnings,
   - liquidity chart,
-  - Trust Map and tiering view.
+  - Trust Map and tiering view,
+  - pool comparison modal (side-by-side metrics and nodes).
 
 Status: **Complete.**
 

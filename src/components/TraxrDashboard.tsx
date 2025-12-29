@@ -6,6 +6,7 @@ import { TraxrPoolCard } from "./TraxrPoolCard";
 import { TraxrTrustMap } from "./TraxrTrustMap";
 import { TraxrConsole } from "./TraxrConsole";
 import { TraxrLiquidityChart } from "./TraxrLiquidityChart";
+import { TraxrCompareModal } from "./TraxrCompareModal";
 import { useCallback } from "react";
 
 type Props = {
@@ -15,6 +16,7 @@ type Props = {
 // Main TRAXR dashboard; consumes pre-scored pools from cache/endpoint.
 export function TraxrDashboard({ pools }: Props) {
   const [query, setQuery] = useState("");
+  const [compareOpen, setCompareOpen] = useState(false);
   const sorted = useMemo(
     () => [...pools].sort((a, b) => b.score - a.score),
     [pools],
@@ -177,7 +179,7 @@ export function TraxrDashboard({ pools }: Props) {
       {selected ? (
         <>
           <div id="traxr-selected-card">
-            <TraxrPoolCard pool={selected} />
+            <TraxrPoolCard pool={selected} onCompare={() => setCompareOpen(true)} />
           </div>
           {/* Interpretation console */}
           <TraxrConsole pool={selected} />
@@ -201,6 +203,13 @@ export function TraxrDashboard({ pools }: Props) {
           No pools available in TRAXR cache.
         </div>
       )}
+
+      <TraxrCompareModal
+        open={compareOpen}
+        pools={filtered}
+        initialLeftId={selected?.poolId}
+        onClose={() => setCompareOpen(false)}
+      />
     </div>
   );
 }

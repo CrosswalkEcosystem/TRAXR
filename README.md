@@ -110,7 +110,7 @@ Upcoming endpoints (roadmap):
 - `src/lib/scoringAdapter.ts` – thin wrapper to call the private package.
 - `src/lib/traxrService.ts` – loads local XRPL pool data, caches and scores pools (uses the private scorer), fuzzy matcher for tokens/pools.
 - `src/app/api/traxr/*` - read-only HTTP surface for TRAXR consumers.
-- `src/components/*` - TRAXR badge, breakdown, trust map, liquidity visualization, warnings.
+- `src/components/*` - TRAXR badge, breakdown, trust map, liquidity visualization, warnings, pool comparison modal.
 - `scripts/fetch_xrpl_pools.js` - safe pool enumeration -> amm_info enrichment -> XRPL-native JSON export (bootstrap layer).
 
 
