@@ -71,7 +71,7 @@ Responsibilities:
 ## 2.3 TRAXR Service Layer (`src/lib/traxrService.ts`)
 The orchestration core. It:
 
-- loads local datasets (`xrplPools.json`) or future indexer feeds,
+- loads local datasets (`xrplPools_*.json`, fallback `xrplPools.json`) or future indexer feeds,
 - resolves tokens, mints, and issuer codes,
 - maps pools to scoring input types (`XRPLPoolMetrics`),
 - delegates computation to the private scoring module,
@@ -124,7 +124,7 @@ Current MVP pipeline is JSON-based for rapid iteration:
 
 XRPL RPC → ledger_data → AMM entries → amm_info enrichment
 ↓
-Normalized dataset → data/xrplPools.json
+Normalized dataset → data/xrplPools_YYYYMMDD_HHmmssZ.json
 ↓
 TRAXR Service → Scoring Engine → UI/API
 
@@ -171,7 +171,7 @@ with historical ledger access.
           ▼
  ┌──────────────────┐
  │ Local Dataset    │
- │ xrplPools.json   │
+ │ xrplPools_*.json │
  └──────────────────┘
           │
           ▼

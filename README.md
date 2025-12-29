@@ -45,7 +45,7 @@ npm run dev
 - `NEXT_PUBLIC_TRAXR_ENABLED=true|false` - toggle TRAXR UI.
 - `TRAXR_OFFLINE=true` — run TRAXR in offline mode using local datasets.
 - `TRAXR_FALLBACK_SAMPLE=true` — load an embedded sample dataset for testing and demos.
-- `TRAXR_LOCAL_POOLS_PATH` - path to XRPL pool JSON (default `data/xrplPools.json`).
+- `TRAXR_LOCAL_POOLS_PATH` - path to XRPL pool JSON (default: newest `data/xrplPools_*.json`, fallback `data/xrplPools.json`).
 - `TRAXR_FETCH_TIMEOUT_MS` - timeout for XRPL RPC calls (default `10000`).
 
 ### Fetch-script flags (`scripts/fetch_xrpl_pools.js`)
@@ -58,7 +58,7 @@ npm run dev
 ---
 
 ## Fetch XRPL AMM pools to JSON (dev flow)
-The fetcher discovers AMM ledger entries via `ledger_data`, enriches them with `amm_info` (reserves, fee, LP info), and writes normalized output to `data/xrplPools.json`.
+The fetcher discovers AMM ledger entries via `ledger_data`, enriches them with `amm_info` (reserves, fee, LP info), and writes normalized output to `data/xrplPools_YYYYMMDD_HHmmssZ.json` (timestamped). The UI will automatically load the newest snapshot unless `TRAXR_LOCAL_POOLS_PATH` is set.
 
 All liquidity and volume values are XRPL-native (XRP-denominated).  
 Fields may retain legacy `*Usd` naming for backward compatibility in the UI layer; no USD valuation is assumed unless explicitly stated.

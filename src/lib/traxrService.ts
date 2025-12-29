@@ -9,9 +9,8 @@ const REFRESH_MS = 5 * 60 * 1000;
 const TOP_N = Infinity;
 
 const FALLBACK_SAMPLE = process.env.TRAXR_FALLBACK_SAMPLE === "true";
-const LOCAL_POOLS_PATH =
-  process.env.TRAXR_LOCAL_POOLS_PATH ||
-  path.join(process.cwd(), "data", "xrplPools.json");
+const LOCAL_POOLS_PATH = process.env.TRAXR_LOCAL_POOLS_PATH || "";
+const LOCAL_POOLS_DIR = path.join(process.cwd(), "data");
 
 // In-memory cache
 let cache = new Map<string, TraxrScoreResult>();
@@ -150,14 +149,35 @@ startTraxrScheduler();
 /* Local cache loader                  */
 /* ---------------------------------- */
 
-function loadLocalPools(): any[] {
-  if (!fs.existsSync(LOCAL_POOLS_PATH)) return [];
+function resolveLocalPoolsPath() {
+  if (LOCAL_POOLS_PATH) return LOCAL_POOLS_PATH;
 
   try {
-    const raw = JSON.parse(fs.readFileSync(LOCAL_POOLS_PATH, "utf8"));
+    const files = fs.readdirSync(LOCAL_POOLS_DIR);
+    const candidates = files
+      .filter((name) => /^xrplPools_.*\.json$/i.test(name))
+      .map((name) => {
+        const fullPath = path.join(LOCAL_POOLS_DIR, name);
+        const stat = fs.statSync(fullPath);
+        return { name, fullPath, mtimeMs: stat.mtimeMs };
+      })
+      .sort((a, b) => b.mtimeMs - a.mtimeMs);
+
+    if (candidates.length) return candidates[0].fullPath;
+  } catch {}
+
+  return path.join(LOCAL_POOLS_DIR, "xrplPools.json");
+}
+
+function loadLocalPools(): any[] {
+  const resolvedPath = resolveLocalPoolsPath();
+  if (!fs.existsSync(resolvedPath)) return [];
+
+  try {
+    const raw = JSON.parse(fs.readFileSync(resolvedPath, "utf8"));
     if (Array.isArray(raw)) {
       console.warn(
-        `[TRAXR] Loaded ${raw.length} pools from ${LOCAL_POOLS_PATH}`,
+        `[TRAXR] Loaded ${raw.length} pools from ${resolvedPath}`,
       );
       return raw;
     }

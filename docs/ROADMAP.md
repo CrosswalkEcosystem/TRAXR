@@ -21,7 +21,7 @@ production-grade indexer and widely adopted ecosystem standard.
 Delivered:
 
 - Next.js dashboard at `traxr.vercel.app`.
-- JSON-based XRPL AMM pool cache (`data/xrplPools.json`).
+- JSON-based XRPL AMM pool cache (`data/xrplPools_YYYYMMDD_HHmmssZ.json`).
 - `scripts/fetch_xrpl_pools.js` for:
   - `ledger_data` enumeration,
   - `amm_info` enrichment.

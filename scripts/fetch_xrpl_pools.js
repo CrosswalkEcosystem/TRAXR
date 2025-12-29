@@ -9,7 +9,19 @@ const XRPSCAN_AMM =
   process.env.XRPSCAN_AMM_BASE || "https://api.xrpscan.com/api/v1/amm";
 
 const LIMIT = Number(process.env.LIMIT || 500);
-const OUTPUT = path.join(__dirname, "..", "data", "xrplPools.json");
+const OUTPUT_DIR = path.join(__dirname, "..", "data");
+
+function timestampSlug() {
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  const yyyy = now.getUTCFullYear();
+  const mm = pad(now.getUTCMonth() + 1);
+  const dd = pad(now.getUTCDate());
+  const hh = pad(now.getUTCHours());
+  const min = pad(now.getUTCMinutes());
+  const ss = pad(now.getUTCSeconds());
+  return `${yyyy}${mm}${dd}_${hh}${min}${ss}Z`;
+}
 
 const withTimeout = (p, label) =>
   Promise.race([
@@ -216,10 +228,14 @@ async function enrichPools(pools) {
     const pools = await fetchPools();
     const enriched = await enrichPools(pools);
 
-    fs.mkdirSync(path.dirname(OUTPUT), { recursive: true });
-    fs.writeFileSync(OUTPUT, JSON.stringify(enriched, null, 2));
+    fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+    const outputFile = path.join(
+      OUTPUT_DIR,
+      `xrplPools_${timestampSlug()}.json`,
+    );
+    fs.writeFileSync(outputFile, JSON.stringify(enriched, null, 2));
 
-    console.log(`[TRAXR] Saved ${enriched.length} final pools.`);
+    console.log(`[TRAXR] Saved ${enriched.length} final pools -> ${outputFile}`);
   } catch (e) {
     console.error("[TRAXR] fetch failed", e);
     process.exit(1);
