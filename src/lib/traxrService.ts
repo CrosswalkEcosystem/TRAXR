@@ -192,7 +192,7 @@ function loadLocalPools(): any[] {
 /* 🔑 NORMALIZATION (MOST IMPORTANT)   */
 /* ---------------------------------- */
 
-function normalizePool(p: any): XRPLPoolMetrics {
+export function normalizePool(p: any): XRPLPoolMetrics {
   const poolId = p.poolId || p.id || `${p.mintA}_${p.mintB}`;
 
   // 👉 XRPL-native liquidity (XRP, not USD)

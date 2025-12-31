@@ -98,6 +98,16 @@ export type TraxrScoreResult = {
   tokenCode?: string;
   tokenIssuer?: string;
 };
+
+// Time-series snapshot for a single pool across cached data files.
+export type TraxrTrendPoint = {
+  timestamp: string;
+  score: number;
+  ctsNodes: number;
+  nodes: TraxrNodeBreakdown;
+  warnings: string[];
+  metrics: XRPLPoolMetrics;
+};
 // -------------------------------
 // TRAXR Console semantic layer
 // -------------------------------

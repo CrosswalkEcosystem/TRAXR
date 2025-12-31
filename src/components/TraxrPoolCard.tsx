@@ -7,6 +7,7 @@ import Image from "next/image";
 type Props = {
   pool: TraxrScoreResult;
   onCompare?: () => void;
+  onTrend?: () => void;
 };
 
 function band(score: number) {
@@ -16,7 +17,7 @@ function band(score: number) {
 }
 
 // TRAXR pool card shows score, CTS nodes, and truthful XRPL-native metrics.
-export function TraxrPoolCard({ pool, onCompare }: Props) {
+export function TraxrPoolCard({ pool, onCompare, onTrend }: Props) {
   const m: any = pool.metrics || pool;
 
   const nameA = tokenDisplay({
@@ -66,26 +67,36 @@ export function TraxrPoolCard({ pool, onCompare }: Props) {
   return (
     <div className="grid gap-4 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur lg:grid-cols-3">
       {/* Header */}
-      <div className="lg:col-span-3 flex items-center gap-3 overflow-hidden">
+      <div className="lg:col-span-3 flex flex-wrap items-center gap-3 overflow-hidden">
         <div className="shrink-0 text-xs uppercase tracking-[0.26em] text-white/60">
           TRAXR SCORE
         </div>
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <div className="truncate whitespace-nowrap text-sm sm:text-base font-semibold text-white">
             {pairLine}
-          </div>
-          <span className="shrink-0 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70">
-            CTS {pool.ctsNodes}
-          </span>
+          </div>  
         </div>
-        {onCompare ? (
-          <button
-            type="button"
-            onClick={onCompare}
-            className="ml-auto rounded-full border border-cyan-400/40 bg-cyan-500/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100 shadow-[0_0_14px_rgba(0,255,255,0.2)] transition hover:border-cyan-300 hover:text-white"
-          >
-            Compare
-          </button>
+        {onCompare || onTrend ? (
+          <div className="w-full sm:w-auto sm:ml-auto flex flex-wrap items-center gap-2">
+            {onTrend ? (
+              <button
+                type="button"
+                onClick={onTrend}
+                className="flex-1 sm:flex-none rounded-full border border-amber-400/40 bg-amber-500/10 px-3 sm:px-4 py-1.5 text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-100 shadow-[0_0_14px_rgba(255,200,80,0.2)] transition hover:border-amber-300 hover:text-white"
+              >
+                Trend
+              </button>
+            ) : null}
+            {onCompare ? (
+              <button
+                type="button"
+                onClick={onCompare}
+                className="flex-1 sm:flex-none rounded-full border border-cyan-400/40 bg-cyan-500/10 px-3 sm:px-4 py-1.5 text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100 shadow-[0_0_14px_rgba(0,255,255,0.2)] transition hover:border-cyan-300 hover:text-white"
+              >
+                Compare
+              </button>
+            ) : null}
+          </div>
         ) : null}
       </div>
 

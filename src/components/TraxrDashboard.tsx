@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { TraxrScoreResult } from "@/lib/types";
 import { TraxrPoolCard } from "./TraxrPoolCard";
 import { TraxrTrustMap } from "./TraxrTrustMap";
 import { TraxrConsole } from "./TraxrConsole";
 import { TraxrLiquidityChart } from "./TraxrLiquidityChart";
 import { TraxrCompareModal } from "./TraxrCompareModal";
-import { useCallback } from "react";
+import { TraxrTrendModal } from "./TraxrTrendModal";
 
 type Props = {
   pools: TraxrScoreResult[];
@@ -17,6 +17,7 @@ type Props = {
 export function TraxrDashboard({ pools }: Props) {
   const [query, setQuery] = useState("");
   const [compareOpen, setCompareOpen] = useState(false);
+  const [trendOpen, setTrendOpen] = useState(false);
   const sorted = useMemo(
     () => [...pools].sort((a, b) => b.score - a.score),
     [pools],
@@ -179,7 +180,11 @@ export function TraxrDashboard({ pools }: Props) {
       {selected ? (
         <>
           <div id="traxr-selected-card">
-            <TraxrPoolCard pool={selected} onCompare={() => setCompareOpen(true)} />
+            <TraxrPoolCard
+              pool={selected}
+              onCompare={() => setCompareOpen(true)}
+              onTrend={() => setTrendOpen(true)}
+            />
           </div>
           {/* Interpretation console */}
           <TraxrConsole pool={selected} />
@@ -209,6 +214,11 @@ export function TraxrDashboard({ pools }: Props) {
         pools={filtered}
         initialLeftId={selected?.poolId}
         onClose={() => setCompareOpen(false)}
+      />
+      <TraxrTrendModal
+        open={trendOpen}
+        pool={selected}
+        onClose={() => setTrendOpen(false)}
       />
     </div>
   );
