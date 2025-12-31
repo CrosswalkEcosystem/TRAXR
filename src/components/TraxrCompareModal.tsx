@@ -1,7 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { TraxrNodeBreakdown, TraxrScoreResult } from "@/lib/types";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { TraxrNodeBreakdown, TraxrScoreResult, TraxrTrendPoint } from "@/lib/types";
+import { IconType } from "react-icons";
+import {
+  FiActivity,
+  FiAlertTriangle,
+  FiBarChart2,
+  FiDroplet,
+  FiHash,
+  FiLayers,
+  FiLink,
+  FiPercent,
+  FiShield,
+  FiTarget,
+  FiThermometer,
+  FiTrendingUp,
+  FiZap,
+} from "react-icons/fi";
 
 type Props = {
   open: boolean;
@@ -11,6 +27,46 @@ type Props = {
 };
 
 type Direction = "higher" | "lower" | "neutral";
+
+type MetricKey =
+  | "score"
+  | "ctsNodes"
+  | "depth"
+  | "activity"
+  | "impact"
+  | "stability"
+  | "trust"
+  | "fee"
+  | "liquidity"
+  | "volume24h"
+  | "feePct"
+  | "trustlines"
+  | "warnings";
+
+type MetricOption = {
+  key: MetricKey;
+  label: string;
+  icon: IconType;
+  description: string;
+};
+
+const metricOptions: MetricOption[] = [
+  { key: "score", label: "TRAXR Score", icon: FiTrendingUp, description: "Overall TRAXR score (0-100)." },
+  { key: "ctsNodes", label: "CTS Nodes", icon: FiHash, description: "CTS node count derived from TRAXR score." },
+  { key: "liquidity", label: "Liquidity (XRP)", icon: FiDroplet, description: "Total pool liquidity in XRPL-native XRP units." },
+  { key: "volume24h", label: "24h Volume (XRP)", icon: FiActivity, description: "24h swap volume in XRPL-native XRP units." },
+  { key: "feePct", label: "Fee %", icon: FiPercent, description: "AMM trading fee percentage (lower is cheaper)." },
+  { key: "trustlines", label: "Trustlines", icon: FiLink, description: "Issuer trustline count." },
+  { key: "warnings", label: "Warnings", icon: FiAlertTriangle, description: "Number of TRAXR warning flags." },
+  { key: "depth", label: "Depth", icon: FiLayers, description: "On-ledger liquidity vs. $1k trade." },
+  { key: "activity", label: "Activity", icon: FiZap, description: "Tx + volume cadence (24h / 7d)." },
+  { key: "impact", label: "Impact", icon: FiTarget, description: "Price impact estimate per hop." },
+  { key: "stability", label: "Stability", icon: FiThermometer, description: "Observed volatility vs. cap." },
+  { key: "trust", label: "Trust", icon: FiShield, description: "Issuer risk and trustlines." },
+  { key: "fee", label: "Node Fee", icon: FiBarChart2, description: "Node-level fee pressure." },
+];
+
+const defaultMetrics: MetricKey[] = ["score", "liquidity", "volume24h", "feePct"];
 
 const nodeLabels: Record<keyof TraxrNodeBreakdown, string> = {
   depth: "Depth",
@@ -37,6 +93,67 @@ const formatPct = (value: number) => {
   if (value > 0 && value < 0.01) return "<0.01%";
   return `${value.toFixed(4)}%`;
 };
+
+function getMetricValue(point: TraxrTrendPoint, key: MetricKey) {
+  const m = point.metrics;
+  switch (key) {
+    case "score":
+      return point.score;
+    case "ctsNodes":
+      return point.ctsNodes;
+    case "depth":
+      return point.nodes.depth;
+    case "activity":
+      return point.nodes.activity;
+    case "impact":
+      return point.nodes.impact;
+    case "stability":
+      return point.nodes.stability;
+    case "trust":
+      return point.nodes.trust;
+    case "fee":
+      return point.nodes.fee;
+    case "liquidity":
+      return typeof m.tvlXrp === "number" ? m.tvlXrp : m.liquidityUsd ?? null;
+    case "volume24h":
+      return typeof m.volume24hUsd === "number" ? m.volume24hUsd : null;
+    case "feePct":
+      return typeof m.feePct === "number" ? m.feePct : null;
+    case "trustlines":
+      return typeof m.trustlines === "number" ? m.trustlines : null;
+    case "warnings":
+      return Array.isArray(point.warnings) ? point.warnings.length : null;
+    default:
+      return null;
+  }
+}
+
+function useSize() {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const node = ref.current;
+    const rect = node.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      setSize({ width: rect.width, height: rect.height });
+    }
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        setSize({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height,
+        });
+      }
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, size };
+}
 
 function poolLabel(p: TraxrScoreResult) {
   const m: any = p.metrics || {};
@@ -363,6 +480,17 @@ export function TraxrCompareModal({ open, pools, initialLeftId, onClose }: Props
   const [rightId, setRightId] = useState<string | undefined>(() =>
     pickOther(initialLeftId ?? pools[0]?.poolId, pools),
   );
+  const [leftTrend, setLeftTrend] = useState<TraxrTrendPoint[]>([]);
+  const [rightTrend, setRightTrend] = useState<TraxrTrendPoint[]>([]);
+  const [trendLoading, setTrendLoading] = useState(false);
+  const [trendError, setTrendError] = useState<string | null>(null);
+  const [activeMetrics, setActiveMetrics] = useState<MetricKey[]>(defaultMetrics);
+  const [hintKey, setHintKey] = useState<MetricKey | null>(null);
+  const [normalize, setNormalize] = useState(true);
+  const [range, setRange] = useState<[number, number]>([0, 0]);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [pinnedIndex, setPinnedIndex] = useState<number | null>(null);
+  const { ref, size } = useSize();
 
   useEffect(() => {
     if (!open) return;
@@ -371,26 +499,71 @@ export function TraxrCompareModal({ open, pools, initialLeftId, onClose }: Props
     setRightId((prev) => pickOther(nextLeft, pools, prev));
   }, [open, initialLeftId, pools]);
 
-  if (!open) return null;
+  useEffect(() => {
+    if (!open || !leftId || !rightId) return;
+    let isMounted = true;
+    setTrendLoading(true);
+    setTrendError(null);
+
+    Promise.all([
+      fetch(`/api/traxr/pool-trend?poolId=${encodeURIComponent(leftId)}`),
+      fetch(`/api/traxr/pool-trend?poolId=${encodeURIComponent(rightId)}`),
+    ])
+      .then(async ([leftRes, rightRes]) => {
+        if (!leftRes.ok) throw new Error(`Left HTTP ${leftRes.status}`);
+        if (!rightRes.ok) throw new Error(`Right HTTP ${rightRes.status}`);
+        const [leftJson, rightJson] = await Promise.all([
+          leftRes.json(),
+          rightRes.json(),
+        ]);
+        if (!isMounted) return;
+        setLeftTrend(Array.isArray(leftJson) ? leftJson : []);
+        setRightTrend(Array.isArray(rightJson) ? rightJson : []);
+      })
+      .catch((e: any) => {
+        if (!isMounted) return;
+        setTrendError(e?.message || "Failed to load trend data");
+        setLeftTrend([]);
+        setRightTrend([]);
+      })
+      .finally(() => {
+        if (isMounted) setTrendLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [open, leftId, rightId]);
+
+  useEffect(() => {
+    const leftTimes = leftTrend.map((p) => p.timestamp);
+    const rightTimes = rightTrend.map((p) => p.timestamp);
+    const merged = Array.from(new Set([...leftTimes, ...rightTimes])).sort();
+    if (!merged.length) {
+      setRange([0, 0]);
+      return;
+    }
+    setRange([0, merged.length - 1]);
+  }, [leftTrend, rightTrend]);
 
   const left = leftId ? poolById.get(leftId) : undefined;
   const right = rightId ? poolById.get(rightId) : undefined;
   const hasChoices = pools.length > 1;
 
-  const leftMetrics: any = left?.metrics || left || {};
-  const rightMetrics: any = right?.metrics || right || {};
+  const leftSnapshot: any = left?.metrics || left || {};
+  const rightSnapshot: any = right?.metrics || right || {};
 
-  const leftLiq = typeof leftMetrics.tvlXrp === "number" ? leftMetrics.tvlXrp : leftMetrics.liquidityUsd ?? null;
-  const rightLiq = typeof rightMetrics.tvlXrp === "number" ? rightMetrics.tvlXrp : rightMetrics.liquidityUsd ?? null;
+  const leftLiq = typeof leftSnapshot.tvlXrp === "number" ? leftSnapshot.tvlXrp : leftSnapshot.liquidityUsd ?? null;
+  const rightLiq = typeof rightSnapshot.tvlXrp === "number" ? rightSnapshot.tvlXrp : rightSnapshot.liquidityUsd ?? null;
 
-  const leftVol = typeof leftMetrics.volume24hUsd === "number" ? leftMetrics.volume24hUsd : null;
-  const rightVol = typeof rightMetrics.volume24hUsd === "number" ? rightMetrics.volume24hUsd : null;
+  const leftVol = typeof leftSnapshot.volume24hUsd === "number" ? leftSnapshot.volume24hUsd : null;
+  const rightVol = typeof rightSnapshot.volume24hUsd === "number" ? rightSnapshot.volume24hUsd : null;
 
-  const leftFee = typeof leftMetrics.feePct === "number" ? leftMetrics.feePct : null;
-  const rightFee = typeof rightMetrics.feePct === "number" ? rightMetrics.feePct : null;
+  const leftFee = typeof leftSnapshot.feePct === "number" ? leftSnapshot.feePct : null;
+  const rightFee = typeof rightSnapshot.feePct === "number" ? rightSnapshot.feePct : null;
 
-  const leftTrust = typeof leftMetrics.trustlines === "number" ? leftMetrics.trustlines : null;
-  const rightTrust = typeof rightMetrics.trustlines === "number" ? rightMetrics.trustlines : null;
+  const leftTrust = typeof leftSnapshot.trustlines === "number" ? leftSnapshot.trustlines : null;
+  const rightTrust = typeof rightSnapshot.trustlines === "number" ? rightSnapshot.trustlines : null;
 
   const leftWarnings = left?.warnings?.length ?? null;
   const rightWarnings = right?.warnings?.length ?? null;
@@ -398,9 +571,200 @@ export function TraxrCompareModal({ open, pools, initialLeftId, onClose }: Props
   const leftName = left ? poolLabel(left) : "Left pool";
   const rightName = right ? poolLabel(right) : "Right pool";
 
+  const hintMetric = hintKey
+    ? metricOptions.find((metric) => metric.key === hintKey) ?? null
+    : null;
+
+  useEffect(() => {
+    if (!hintKey) return;
+    const timer = setTimeout(() => setHintKey(null), 2600);
+    return () => clearTimeout(timer);
+  }, [hintKey]);
+
+  const visibleMetrics = useMemo(() => {
+    if (activeMetrics.length) return activeMetrics;
+    return metricOptions[0] ? [metricOptions[0].key] : [];
+  }, [activeMetrics]);
+  const visibleOptions = metricOptions.filter((metric) =>
+    visibleMetrics.includes(metric.key),
+  );
+
+  const timeline = useMemo(() => {
+    const leftTimes = leftTrend.map((p) => p.timestamp);
+    const rightTimes = rightTrend.map((p) => p.timestamp);
+    const merged = Array.from(new Set([...leftTimes, ...rightTimes])).sort();
+    return merged.slice(range[0], range[1] + 1);
+  }, [leftTrend, rightTrend, range]);
+
+  const leftByTs = useMemo(
+    () => new Map(leftTrend.map((p) => [p.timestamp, p])),
+    [leftTrend],
+  );
+  const rightByTs = useMemo(
+    () => new Map(rightTrend.map((p) => [p.timestamp, p])),
+    [rightTrend],
+  );
+
+  const chartWidth = size.width || 640;
+  const chartHeight = size.height || 320;
+  const padding = { left: 36, right: 16, top: 16, bottom: 28 };
+  const plotWidth = Math.max(0, chartWidth - padding.left - padding.right);
+  const plotHeight = Math.max(0, chartHeight - padding.top - padding.bottom);
+
+  const chartMeta = useMemo(() => {
+    const normalized = new Map<
+      MetricKey,
+      { left: Array<number | null>; right: Array<number | null> }
+    >();
+    const bounds = new Map<MetricKey, { min: number; max: number }>();
+
+    for (const metric of visibleOptions) {
+      const leftSeries = timeline.map((ts) => {
+        const point = leftByTs.get(ts);
+        if (!point) return null;
+        const value = getMetricValue(point, metric.key);
+        return typeof value === "number" ? value : null;
+      });
+      const rightSeries = timeline.map((ts) => {
+        const point = rightByTs.get(ts);
+        if (!point) return null;
+        const value = getMetricValue(point, metric.key);
+        return typeof value === "number" ? value : null;
+      });
+
+      const applyNormalize = (series: Array<number | null>) => {
+        if (!normalize) return series;
+        const base = series.find((v) => typeof v === "number" && v !== 0) ?? 1;
+        return series.map((v) =>
+          typeof v === "number" ? (v / base) * 100 : null,
+        );
+      };
+
+      const leftNorm = applyNormalize(leftSeries);
+      const rightNorm = applyNormalize(rightSeries);
+      normalized.set(metric.key, { left: leftNorm, right: rightNorm });
+
+      const activeVals = [...leftNorm, ...rightNorm].filter(
+        (v): v is number => typeof v === "number",
+      );
+
+      const min = activeVals.length ? Math.min(...activeVals) : 0;
+      const max = activeVals.length ? Math.max(...activeVals) : 1;
+      const range = Math.max(1e-6, max - min);
+      const avg = (Math.abs(min) + Math.abs(max)) / 2 || 1;
+      const minSpan = normalize ? 1 : Math.max(avg * 0.005, 1e-6);
+      const span = Math.max(range, minSpan);
+      const pad = span * (normalize ? 0.06 : 0.04);
+
+      if (normalize) {
+        const mid = (min + max) / 2;
+        bounds.set(metric.key, {
+          min: mid - span / 2 - pad,
+          max: mid + span / 2 + pad,
+        });
+      } else {
+        const rawMin = min >= 0 ? 0 : min;
+        const rawMax = max;
+        const rawRange = Math.max(1e-6, rawMax - rawMin);
+        const paddedMin = rawMin >= 0 ? rawMin : rawMin - pad;
+        const paddedMax = rawMax + pad;
+        const finalMin = paddedMin;
+        const finalMax =
+          rawRange < minSpan ? rawMin + minSpan + pad : paddedMax;
+        bounds.set(metric.key, { min: finalMin, max: finalMax });
+      }
+    }
+
+    return { normalized, bounds };
+  }, [timeline, leftByTs, rightByTs, visibleOptions, normalize]);
+
+  const paths = useMemo(() => {
+    const map = new Map<MetricKey, { left: string; right: string }>();
+    if (!timeline.length || plotWidth <= 0 || plotHeight <= 0) return map;
+
+    const lanes = visibleOptions.length;
+    const laneHeight = lanes > 0 ? plotHeight / lanes : plotHeight;
+
+    for (const [index, metric] of visibleOptions.entries()) {
+      const series = chartMeta.normalized.get(metric.key);
+      if (!series) continue;
+      const bounds = chartMeta.bounds.get(metric.key) || { min: 0, max: 1 };
+      const range = Math.max(1e-6, bounds.max - bounds.min);
+      const laneTop = padding.top + index * laneHeight;
+      const lanePad = Math.max(6, laneHeight * 0.12);
+      const usableHeight = Math.max(1, laneHeight - lanePad * 2);
+
+      const poolOffset = normalize ? Math.min(10, laneHeight * 0.14) : 0;
+      const buildPath = (values: Array<number | null>, offset: number) => {
+        let path = "";
+        values.forEach((value, idx) => {
+          if (typeof value !== "number") return;
+          const x =
+            padding.left +
+            (values.length === 1 ? 0 : (idx / (values.length - 1)) * plotWidth);
+          const y =
+            laneTop +
+            lanePad +
+            usableHeight -
+            ((value - bounds.min) / range) * usableHeight +
+            offset;
+          path += path ? ` L ${x} ${y}` : `M ${x} ${y}`;
+        });
+        return path;
+      };
+
+      map.set(metric.key, {
+        left: buildPath(series.left, -poolOffset),
+        right: buildPath(series.right, poolOffset),
+      });
+    }
+
+    return map;
+  }, [timeline, plotHeight, plotWidth, chartMeta]);
+
+  const hoverPoint = hoverIndex !== null ? timeline[hoverIndex] : null;
+  const activePoint = pinnedIndex !== null ? timeline[pinnedIndex] : hoverPoint;
+  const hoverLeft = activePoint ? leftByTs.get(activePoint) : null;
+  const hoverRight = activePoint ? rightByTs.get(activePoint) : null;
+  const activeMetric = visibleOptions[0]?.key;
+  const activeBounds =
+    (activeMetric && chartMeta.bounds.get(activeMetric)) || { min: 0, max: 1 };
+  const xStartLabel = timeline[0]
+    ? new Date(timeline[0]).toLocaleString()
+    : "";
+  const xEndLabel = timeline[timeline.length - 1]
+    ? new Date(timeline[timeline.length - 1]).toLocaleString()
+    : "";
+
+  function toggleMetric(key: MetricKey) {
+    setActiveMetrics((prev) => (prev[0] === key ? prev : [key]));
+    setHintKey(key);
+  }
+
+  function clampRange(nextStart: number, nextEnd: number) {
+    if (timeline.length <= 1) return [0, 0] as [number, number];
+    const start = Math.max(0, Math.min(nextStart, timeline.length - 2));
+    const end = Math.max(start + 1, Math.min(nextEnd, timeline.length - 1));
+    return [start, end] as [number, number];
+  }
+
+  if (!open) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 px-3 py-6 backdrop-blur sm:items-center">
       <div className="relative w-full max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0a101c] via-[#0f172a] to-[#0b1220] shadow-[0_0_40px_rgba(0,0,0,0.55)]">
+        <style jsx>{`
+          @keyframes traxr-draw {
+            from {
+              stroke-dashoffset: 1;
+              opacity: 0.2;
+            }
+            to {
+              stroke-dashoffset: 0;
+              opacity: 1;
+            }
+          }
+        `}</style>
         <div className="border-b border-white/10 px-5 py-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -538,7 +902,6 @@ export function TraxrCompareModal({ open, pools, initialLeftId, onClose }: Props
                 </div>
               </div>
             </div>
-
             <div className="mt-4 grid gap-2">
               <MetricRow
                 label="Liquidity (XRP)"
@@ -599,6 +962,376 @@ export function TraxrCompareModal({ open, pools, initialLeftId, onClose }: Props
                     })}
               </div>
             </div>
+            <div className="mt-4 rounded-3xl border border-white/10 bg-white/5 p-4">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-xs uppercase tracking-[0.22em] text-white/60">
+                <div>Trend comparison</div>
+                <button
+                  type="button"
+                  onClick={() => setNormalize((prev) => !prev)}
+                  className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] transition ${
+                    normalize
+                      ? "border-emerald-300/40 bg-emerald-500/10 text-emerald-100"
+                      : "border-white/15 bg-white/5 text-white/50"
+                  }`}
+                >
+                  {normalize ? "Normalized" : "Raw scale"}
+                </button>
+              </div>
+
+              {trendLoading ? (
+                <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/70">
+                  Loading trend data...
+                </div>
+              ) : trendError ? (
+                <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100">
+                  {trendError}
+                </div>
+              ) : !timeline.length ? (
+                <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/70">
+                  No trend data available.
+                </div>
+              ) : (
+                <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/50">
+                      <span className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2 py-1 text-cyan-100">
+                        {leftName}
+                      </span>
+                      <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-1 text-amber-100">
+                        {rightName}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      {metricOptions.map((metric) => (
+                        <button
+                          key={`metric-${metric.key}`}
+                          type="button"
+                          aria-label={metric.label}
+                          title={metric.description}
+                          onClick={() => toggleMetric(metric.key)}
+                          className={`inline-flex h-9 w-9 items-center justify-center rounded-full border text-sm transition ${
+                            visibleMetrics.includes(metric.key)
+                              ? "border-cyan-300/60 bg-cyan-500/10 text-cyan-100 shadow-[0_0_14px_rgba(0,255,255,0.25)]"
+                              : "border-white/15 bg-white/5 text-white/40 hover:text-white/80"
+                          }`}
+                        >
+                          <metric.icon className="h-4 w-4" />
+                        </button>
+                      ))}
+                    </div>
+                    {hintMetric ? (
+                      <div className="rounded-2xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-white/70">
+                        <span className="font-semibold text-white/90">{hintMetric.label}</span>
+                        <span className="text-white/50"> — </span>
+                        <span>{hintMetric.description}</span>
+                      </div>
+                    ) : null}
+
+                    <div ref={ref} className="relative h-72 sm:h-80">
+                      <svg
+                        width="100%"
+                        height="100%"
+                        viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+                        className="absolute inset-0"
+                        style={{ touchAction: "none" }}
+                        onMouseLeave={() => setHoverIndex(null)}
+                        onMouseMove={(event) => {
+                          if (!timeline.length) return;
+                          const rect = (
+                            event.currentTarget as SVGSVGElement
+                          ).getBoundingClientRect();
+                          const usableWidth = Math.max(
+                            1,
+                            rect.width - padding.left - padding.right,
+                          );
+                          const x = event.clientX - rect.left - padding.left;
+                          const ratio = Math.max(0, Math.min(1, x / usableWidth));
+                          const idx = Math.round(
+                            ratio * Math.max(0, timeline.length - 1),
+                          );
+                          setHoverIndex(idx);
+                        }}
+                        onClick={(event) => {
+                          if (!timeline.length) return;
+                          const rect = (
+                            event.currentTarget as SVGSVGElement
+                          ).getBoundingClientRect();
+                          const usableWidth = Math.max(
+                            1,
+                            rect.width - padding.left - padding.right,
+                          );
+                          const x = event.clientX - rect.left - padding.left;
+                          const ratio = Math.max(0, Math.min(1, x / usableWidth));
+                          const idx = Math.round(
+                            ratio * Math.max(0, timeline.length - 1),
+                          );
+                          setPinnedIndex((prev) => (prev === idx ? null : idx));
+                        }}
+                        onTouchStart={(event) => {
+                          if (!timeline.length) return;
+                          event.preventDefault();
+                          const touch = event.touches[0];
+                          if (!touch) return;
+                          const rect = (
+                            event.currentTarget as SVGSVGElement
+                          ).getBoundingClientRect();
+                          const usableWidth = Math.max(
+                            1,
+                            rect.width - padding.left - padding.right,
+                          );
+                          const x = touch.clientX - rect.left - padding.left;
+                          const ratio = Math.max(0, Math.min(1, x / usableWidth));
+                          const idx = Math.round(
+                            ratio * Math.max(0, timeline.length - 1),
+                          );
+                          setPinnedIndex((prev) => (prev === idx ? null : idx));
+                        }}
+                      >
+                        {Array.from({ length: 4 }).map((_, idx) => {
+                          const y = padding.top + (idx / 3) * plotHeight;
+                          return (
+                            <line
+                              key={`grid-${idx}`}
+                              x1={padding.left}
+                              x2={padding.left + plotWidth}
+                              y1={y}
+                              y2={y}
+                              stroke="rgba(255,255,255,0.08)"
+                              strokeDasharray="4 6"
+                            />
+                          );
+                        })}
+                        {activeMetric
+                          ? [0, 0.5, 1].map((t, idx) => {
+                              const y =
+                                padding.top + (1 - t) * plotHeight;
+                              const value =
+                                activeBounds.min +
+                                t * (activeBounds.max - activeBounds.min);
+                              return (
+                                <text
+                                  key={`ytick-${idx}`}
+                                  x={padding.left - 8}
+                                  y={y + 4}
+                                  textAnchor="end"
+                                  fontSize="10"
+                                  fill="rgba(255,255,255,0.45)"
+                                >
+                                  {value.toLocaleString("en-US", {
+                                    maximumFractionDigits: 4,
+                                  })}
+                                </text>
+                              );
+                            })
+                          : null}
+                        {visibleOptions.map((metric, idx) => {
+                          const series = paths.get(metric.key);
+                          if (!series) return null;
+                          const leftPath = series.left;
+                          const rightPath = series.right;
+                          return (
+                            <g key={metric.key}>
+                              {leftPath ? (
+                                <path
+                                  d={leftPath}
+                                  className="stroke-cyan-300 fill-none"
+                                  strokeWidth={2.1}
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  pathLength={1}
+                                  strokeDasharray={1}
+                                  strokeDashoffset={1}
+                                  style={{
+                                    animation: "traxr-draw 0.9s ease forwards",
+                                    animationDelay: `${idx * 70}ms`,
+                                  }}
+                                />
+                              ) : null}
+                              {rightPath ? (
+                                <path
+                                  d={rightPath}
+                                  className="stroke-amber-300 fill-none"
+                                  strokeWidth={2.1}
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  pathLength={1}
+                                  strokeDasharray={1}
+                                  strokeDashoffset={1}
+                                  style={{
+                                    animation: "traxr-draw 0.9s ease forwards",
+                                    animationDelay: `${idx * 70 + 160}ms`,
+                                  }}
+                                />
+                              ) : null}
+                            </g>
+                          );
+                        })}
+                        {(pinnedIndex !== null || hoverIndex !== null) && timeline.length ? (
+                          <line
+                            x1={
+                              padding.left +
+                              (timeline.length === 1
+                                ? 0
+                                : ((pinnedIndex ?? hoverIndex ?? 0) /
+                                    (timeline.length - 1)) *
+                                  plotWidth)
+                            }
+                            x2={
+                              padding.left +
+                              (timeline.length === 1
+                                ? 0
+                                : ((pinnedIndex ?? hoverIndex ?? 0) /
+                                    (timeline.length - 1)) *
+                                  plotWidth)
+                            }
+                            y1={padding.top}
+                            y2={padding.top + plotHeight}
+                            stroke={
+                              pinnedIndex !== null
+                                ? "rgba(0,255,255,0.6)"
+                                : "rgba(255,255,255,0.25)"
+                            }
+                            strokeDasharray="3 6"
+                          />
+                        ) : null}
+                        {xStartLabel ? (
+                          <text
+                            x={padding.left}
+                            y={padding.top + plotHeight + 18}
+                            textAnchor="start"
+                            fontSize="10"
+                            fill="rgba(255,255,255,0.45)"
+                          >
+                            {xStartLabel}
+                          </text>
+                        ) : null}
+                        {xEndLabel ? (
+                          <text
+                            x={padding.left + plotWidth}
+                            y={padding.top + plotHeight + 18}
+                            textAnchor="end"
+                            fontSize="10"
+                            fill="rgba(255,255,255,0.45)"
+                          >
+                            {xEndLabel}
+                          </text>
+                        ) : null}
+                      </svg>
+                      {activePoint ? (
+                        <div className="pointer-events-none absolute right-4 top-4 max-w-[240px] rounded-2xl border border-white/15 bg-black/80 p-3 text-xs text-white/80 shadow-[0_0_18px_rgba(0,0,0,0.45)]">
+                          <div className="text-[10px] uppercase tracking-[0.2em] text-white/50">
+                            {new Date(activePoint).toLocaleString()}
+                          </div>
+                          <div className="mt-2 space-y-1">
+                            {visibleOptions.map((metric) => {
+                              const leftVal =
+                                hoverLeft
+                                  ? getMetricValue(hoverLeft, metric.key)
+                                  : null;
+                              const rightVal =
+                                hoverRight
+                                  ? getMetricValue(hoverRight, metric.key)
+                                  : null;
+                              if (leftVal === null && rightVal === null) return null;
+                              return (
+                                <div key={metric.key} className="flex items-center gap-2">
+                                  <span className="text-white/60">{metric.label}</span>
+                                  {leftVal !== null ? (
+                                    <span className="ml-auto text-cyan-200">
+                                      {typeof leftVal === "number"
+                                        ? leftVal.toLocaleString("en-US", {
+                                            maximumFractionDigits: 4,
+                                          })
+                                        : "n/a"}
+                                    </span>
+                                  ) : null}
+                                  {rightVal !== null ? (
+                                    <span className="text-amber-200">
+                                      {typeof rightVal === "number"
+                                        ? rightVal.toLocaleString("en-US", {
+                                            maximumFractionDigits: 4,
+                                          })
+                                        : "n/a"}
+                                    </span>
+                                  ) : null}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {timeline.length > 1 ? (
+                      <div className="grid gap-3 rounded-2xl border border-white/10 bg-black/30 p-3 sm:grid-cols-2">
+                        <label className="space-y-2 text-xs text-white/60">
+                          Start
+                          <input
+                            type="range"
+                            min={0}
+                            max={Math.max(0, timeline.length - 2)}
+                            value={range[0]}
+                            onChange={(e) => {
+                              const nextStart = Number(e.target.value);
+                              setRange((prev) =>
+                                clampRange(nextStart, prev[1]),
+                              );
+                            }}
+                            className="w-full"
+                          />
+                        </label>
+                        <label className="space-y-2 text-xs text-white/60">
+                          End
+                          <input
+                            type="range"
+                            min={1}
+                            max={Math.max(1, timeline.length - 1)}
+                            value={range[1]}
+                            onChange={(e) => {
+                              const nextEnd = Number(e.target.value);
+                              setRange((prev) =>
+                                clampRange(prev[0], nextEnd),
+                              );
+                            }}
+                            className="w-full"
+                          />
+                        </label>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-white/80">
+                    <div className="text-xs uppercase tracking-[0.22em] text-white/60">
+                      Snapshot window
+                    </div>
+                    <div className="mt-2 text-sm text-white/70">
+                      {timeline[0]
+                        ? new Date(timeline[0]).toLocaleString()
+                        : "n/a"}{" "}
+                      -{" "}
+                      {timeline[timeline.length - 1]
+                        ? new Date(timeline[timeline.length - 1]).toLocaleString()
+                        : "n/a"}
+                    </div>
+                    <div className="mt-3 text-xs text-white/50">
+                      {timeline.length} snapshots
+                    </div>
+                    <div className="mt-4 space-y-2 text-xs text-white/50">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-cyan-300" />
+                        <span>{leftName}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-amber-300" />
+                        <span>{rightName}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
           </>
         )}
       </div>
