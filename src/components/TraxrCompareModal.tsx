@@ -66,7 +66,7 @@ const metricOptions: MetricOption[] = [
   { key: "fee", label: "Node Fee", icon: FiBarChart2, description: "Node-level fee pressure." },
 ];
 
-const defaultMetrics: MetricKey[] = ["score", "liquidity", "volume24h", "feePct"];
+const defaultMetrics: MetricKey[] = ["score"];
 
 const nodeLabels: Record<keyof TraxrNodeBreakdown, string> = {
   depth: "Depth",
@@ -589,12 +589,16 @@ export function TraxrCompareModal({ open, pools, initialLeftId, onClose }: Props
     visibleMetrics.includes(metric.key),
   );
 
-  const timeline = useMemo(() => {
+  const fullTimeline = useMemo(() => {
     const leftTimes = leftTrend.map((p) => p.timestamp);
     const rightTimes = rightTrend.map((p) => p.timestamp);
-    const merged = Array.from(new Set([...leftTimes, ...rightTimes])).sort();
-    return merged.slice(range[0], range[1] + 1);
-  }, [leftTrend, rightTrend, range]);
+    return Array.from(new Set([...leftTimes, ...rightTimes])).sort();
+  }, [leftTrend, rightTrend]);
+
+  const timeline = useMemo(
+    () => fullTimeline.slice(range[0], range[1] + 1),
+    [fullTimeline, range],
+  );
 
   const leftByTs = useMemo(
     () => new Map(leftTrend.map((p) => [p.timestamp, p])),
@@ -742,9 +746,9 @@ export function TraxrCompareModal({ open, pools, initialLeftId, onClose }: Props
   }
 
   function clampRange(nextStart: number, nextEnd: number) {
-    if (timeline.length <= 1) return [0, 0] as [number, number];
-    const start = Math.max(0, Math.min(nextStart, timeline.length - 2));
-    const end = Math.max(start + 1, Math.min(nextEnd, timeline.length - 1));
+    if (fullTimeline.length <= 1) return [0, 0] as [number, number];
+    const start = Math.max(0, Math.min(nextStart, fullTimeline.length - 2));
+    const end = Math.max(start + 1, Math.min(nextEnd, fullTimeline.length - 1));
     return [start, end] as [number, number];
   }
 
@@ -1263,14 +1267,14 @@ export function TraxrCompareModal({ open, pools, initialLeftId, onClose }: Props
                       ) : null}
                     </div>
 
-                    {timeline.length > 1 ? (
+                    {fullTimeline.length > 1 ? (
                       <div className="grid gap-3 rounded-2xl border border-white/10 bg-black/30 p-3 sm:grid-cols-2">
                         <label className="space-y-2 text-xs text-white/60">
                           Start
                           <input
                             type="range"
                             min={0}
-                            max={Math.max(0, timeline.length - 2)}
+                            max={Math.max(0, fullTimeline.length - 2)}
                             value={range[0]}
                             onChange={(e) => {
                               const nextStart = Number(e.target.value);
@@ -1286,7 +1290,7 @@ export function TraxrCompareModal({ open, pools, initialLeftId, onClose }: Props
                           <input
                             type="range"
                             min={1}
-                            max={Math.max(1, timeline.length - 1)}
+                            max={Math.max(1, fullTimeline.length - 1)}
                             value={range[1]}
                             onChange={(e) => {
                               const nextEnd = Number(e.target.value);
