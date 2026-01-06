@@ -154,14 +154,27 @@ function resolveLocalPoolsPath() {
 
   try {
     const files = fs.readdirSync(LOCAL_POOLS_DIR);
+    const parseTimestamp = (name: string) => {
+      const match = /^xrplPools_(\d{8})_(\d{6})Z\.json$/i.exec(name);
+      if (!match) return null;
+      const date = match[1];
+      const time = match[2];
+      const iso = `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}T${time.slice(0, 2)}:${time.slice(2, 4)}:${time.slice(4, 6)}Z`;
+      const ms = Date.parse(iso);
+      return Number.isNaN(ms) ? null : ms;
+    };
     const candidates = files
       .filter((name) => /^xrplPools_.*\.json$/i.test(name))
       .map((name) => {
         const fullPath = path.join(LOCAL_POOLS_DIR, name);
         const stat = fs.statSync(fullPath);
-        return { name, fullPath, mtimeMs: stat.mtimeMs };
+        return { name, fullPath, mtimeMs: stat.mtimeMs, stampMs: parseTimestamp(name) };
       })
-      .sort((a, b) => b.mtimeMs - a.mtimeMs);
+      .sort((a, b) => {
+        const aMs = a.stampMs ?? a.mtimeMs;
+        const bMs = b.stampMs ?? b.mtimeMs;
+        return bMs - aMs;
+      });
 
     if (candidates.length) return candidates[0].fullPath;
   } catch {}
