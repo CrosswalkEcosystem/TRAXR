@@ -213,6 +213,12 @@ export default function MethodologyPage() {
               Architecture
             </a>
             <a
+              href="/api-preview"
+              className="hover:text-white"
+            >
+              API (preview)
+            </a>
+            <a
               href="/data-model"
               className="hover:text-white"
             >

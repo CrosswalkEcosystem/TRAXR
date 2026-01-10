@@ -201,6 +201,12 @@ export default function DataModelPage() {
               Architecture
             </a>
             <a
+              href="/api-preview"
+              className="hover:text-white"
+            >
+              API (preview)
+            </a>
+            <a
               href="https://crosswalk.pro"
               target="_blank"
               rel="noopener noreferrer"
