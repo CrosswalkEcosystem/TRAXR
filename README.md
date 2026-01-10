@@ -97,7 +97,7 @@ Response includes:
 - warnings and raw XRPL-native metrics used for computation (liquidity, volume, trustlines, fees)
 
 
-Upcoming endpoints (roadmap):
+Additional endpoints (preview, snapshot-backed):
 - `GET /api/traxr/pools`
 - `GET /api/traxr/pools/:id`
 - `GET /api/traxr/issuer/:address`
@@ -148,6 +148,7 @@ Upcoming endpoints (roadmap):
 ## Status
 TRAXR is currently in active MVP development.  
 Public endpoints, UI components, and scoring integration are functional.  
+Additional endpoints are available in preview form (snapshot-backed, no pagination/filters, and no live alerting).  
 Full XRPL indexer and advanced scoring versions will be part of upcoming milestones.
 
 ## License

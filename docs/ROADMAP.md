@@ -65,6 +65,9 @@ Additional endpoints:
 - `GET /api/traxr/pools/:id`
   - Detailed view for a single pool.
 
+Note: preview versions of these endpoints exist today, but pagination,
+filters, and hardened response contracts are still part of M1.
+
 Outcome:
 
 - External integrators (wallets, explorers, DEX UIs) can rely on a stable
@@ -113,8 +116,11 @@ Planned work:
   - flags unusual activity or volume spikes,
   - highlights issuer / trustline events relevant to risk.
 - Extend API with:
-  - `GET /api/traxr/issuer/:address` — issuer-level analytics,
-  - `GET /api/traxr/alerts` — list of active risk signals.
+  - `GET /api/traxr/issuer/:address` - issuer-level analytics,
+  - `GET /api/traxr/alerts` - list of active risk signals.
+
+Note: preview endpoints exist today; full issuer analytics and live alerting
+remain part of M3 alongside the indexer.
 
 Outcome:
 

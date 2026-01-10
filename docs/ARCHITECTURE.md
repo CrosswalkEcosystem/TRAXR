@@ -52,12 +52,12 @@ The frontend is fully decoupled from the scoring logic — it receives precomput
 ## 2.2 API Layer (`/api/traxr/*`)
 Read-only endpoints for UI and integrators.
 
-Current endpoints:
+Current endpoints (preview unless noted):
 - `GET /api/traxr/score?mintA=...&mintB=...`  
-- `GET /api/traxr/pools` (upcoming)  
-- `GET /api/traxr/pools/:id` (upcoming)  
-- `GET /api/traxr/issuer/:address` (roadmap)  
-- `GET /api/traxr/alerts` (roadmap)
+- `GET /api/traxr/pools`  
+- `GET /api/traxr/pools/:id`  
+- `GET /api/traxr/issuer/:address`  
+- `GET /api/traxr/alerts`
 
 Responsibilities:
 - request validation,

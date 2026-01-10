@@ -125,21 +125,28 @@ export default function Home() {
 
               {/* Links */}
               <div className="mt-6 flex justify-center">
-  <div className="flex items-center gap-3 text-sm text-white/60">
+  <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-white/60">
     <a
       href="/methodology"
       className="underline decoration-dashed underline-offset-4 decoration-white/40 hover:decoration-cyan-300 transition"
     >
       Methodology
     </a>
-    <span className="text-white/40">·</span>
+    <span className="hidden text-white/40 sm:inline">·</span>
     <a
       href="/architecture"
       className="underline decoration-dashed underline-offset-4 decoration-white/40 hover:decoration-cyan-300 transition"
     >
       Architecture
     </a>
-    <span className="text-white/40">·</span>
+    <span className="hidden text-white/40 sm:inline">|</span>
+    <a
+      href="/api-preview"
+      className="underline decoration-dashed underline-offset-4 decoration-white/40 hover:decoration-cyan-300 transition"
+    >
+      API (preview)
+    </a>
+    <span className="hidden text-white/40 sm:inline">·</span>
     <a
       href="/data-model"
       className="underline decoration-dashed underline-offset-4 decoration-white/40 hover:decoration-cyan-300 transition"
@@ -213,6 +220,9 @@ export default function Home() {
             </a>
             <a href="/architecture" className="hover:text-white">
               Architecture
+            </a>
+            <a href="/api-preview" className="hover:text-white">
+              API (preview)
             </a>
             <a href="/data-model" className="hover:text-white">
               Data model
