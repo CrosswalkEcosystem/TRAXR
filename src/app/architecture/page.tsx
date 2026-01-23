@@ -214,10 +214,11 @@ export default function ArchitecturePage() {
             </a>
           </div>
           <div className="text-white/50">
-            © 2025 Crosswalk Ecosystem LLC. All rights reserved.
+            © 2026 Crosswalk Ecosystem LLC. All rights reserved.
           </div>
         </footer>
       </div>
     </main>
   );
 }
+
